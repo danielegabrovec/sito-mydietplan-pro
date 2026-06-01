@@ -24,6 +24,8 @@ export default async function handler(req, res) {
     });
   }
 
+  // Dynamic destination email (defaults to your Resend account owner email)
+  const destinationEmail = process.env.TO_EMAIL || 'daniele.gabrovec@gmail.com';
   const { subject, html, text } = req.body;
 
   try {
@@ -35,7 +37,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         from: 'MyDietPlan Pro <onboarding@resend.dev>',
-        to: 'info.dottdanielegabrovec@gmail.com',
+        to: destinationEmail,
         subject: subject || 'Nuovo Messaggio dal Sito MyDietPlan Pro',
         html: html || `<p>Messaggio vuoto</p>`,
         text: text || 'Messaggio vuoto'
