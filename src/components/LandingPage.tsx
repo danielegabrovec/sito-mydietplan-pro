@@ -1026,13 +1026,21 @@ export default function LandingPage() {
                     if (!heroEmail) return;
                     setHeroLoading(true);
                     try {
-                      await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
+                      await fetch("/api/send", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                        headers: { "Content-Type": "application/json" },
                         body: JSON.stringify({
-                          _subject: "Nuovo Lead - Hero (Prova 7 Giorni) - MyDietPlan Pro",
-                          email: heroEmail,
-                          tipo_form: "Signup Prova Gratis (Hero Block)"
+                          subject: "⚡ Nuovo Lead: Prova 7 Giorni (Hero Block) - MyDietPlan Pro",
+                          html: `
+                            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #0b0f19; color: #ffffff;">
+                              <h2 style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 10px; margin-top: 0;">MyDietPlan Pro - Lead Capture</h2>
+                              <p style="font-size: 16px; line-height: 1.5; color: #ffffff;">Un utente ha richiesto di iniziare la <strong>Prova Gratuita di 7 Giorni</strong> dal blocco Hero in cima alla pagina.</p>
+                              <div style="background-color: #1e293b; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                <p style="margin: 0; font-size: 15px; color: #ffffff;"><strong>Indirizzo Email:</strong> <a href="mailto:${heroEmail}" style="color: #22d3ee; text-decoration: none;">${heroEmail}</a></p>
+                              </div>
+                              <p style="font-size: 12px; color: #94a3b8; margin-top: 30px; border-top: 1px solid #1e293b; padding-top: 10px; text-align: center;">Inviato automaticamente dal sito MyDietPlan Pro.</p>
+                            </div>
+                          `
                         })
                       });
                     } catch (err) {
@@ -1766,26 +1774,45 @@ export default function LandingPage() {
                                 if (!calcEmail) return;
                                 setCalcLoading(true);
                                 try {
-                                  await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
+                                  await fetch("/api/send", {
                                     method: "POST",
-                                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                                    headers: { "Content-Type": "application/json" },
                                     body: JSON.stringify({
-                                      _subject: `Nuovo Lead - Calcolatore BMR & Macro - MyDietPlan Pro`,
-                                      email: calcEmail,
-                                      nome: calcNome || "Utente Calcolatore",
-                                      sesso: calcSesso === 'm' ? 'Uomo' : 'Donna',
-                                      eta: calcEta,
-                                      altezza: `${calcAltezza} cm`,
-                                      peso: `${calcPeso} kg`,
-                                      attivita: calcAttivita,
-                                      obiettivo: calcGoal,
-                                      BMR: `${res.bmr} kcal`,
-                                      TDEE: `${res.tdee} kcal`,
-                                      kcal_target: `${res.kcalTarget} kcal`,
-                                      carboidrati: `${res.carboidratiGrams} g`,
-                                      proteine: `${res.proteineGrams} g`,
-                                      grassi: `${res.grassiGrams} g`,
-                                      tipo_form: "BMR Calculator Results Lead"
+                                      subject: `📊 Target Nutrizionali: ${calcNome || "Utente"} - MyDietPlan Pro`,
+                                      html: `
+                                        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b0f19; color: #ffffff;">
+                                          <h2 style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 10px; margin-top: 0;">MyDietPlan Pro - Report Calcolatore</h2>
+                                          <p style="font-size: 15px; color: #ffffff;">Un utente ha calcolato i propri parametri metabolici e salvato il report:</p>
+                                          
+                                          <h3 style="color: #14b8a6; margin-top: 25px;">👤 Dati Personali</h3>
+                                          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: #ffffff;">
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8; width: 40%;"><strong>Nome:</strong></td><td style="padding: 8px 0; color: #ffffff;">${calcNome || "N/D"}</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Email:</strong></td><td style="padding: 8px 0;"><a href="mailto:${calcEmail}" style="color: #22d3ee; text-decoration: none;">${calcEmail}</a></td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Sesso Biologico:</strong></td><td style="padding: 8px 0; color: #ffffff;">${calcSesso === 'm' ? 'Uomo' : 'Donna'}</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Età:</strong></td><td style="padding: 8px 0; color: #ffffff;">${calcEta} anni</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Altezza:</strong></td><td style="padding: 8px 0; color: #ffffff;">${calcAltezza} cm</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Peso:</strong></td><td style="padding: 8px 0; color: #ffffff;">${calcPeso} kg</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Attività Fisica:</strong></td><td style="padding: 8px 0; color: #ffffff; text-transform: capitalize;">${calcAttivita}</td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #94a3b8;"><strong>Obiettivo:</strong></td><td style="padding: 8px 0; color: #ffffff; text-transform: capitalize;">${calcGoal.replace('_', ' ')}</td></tr>
+                                          </table>
+                                          
+                                          <h3 style="color: #14b8a6; margin-top: 30px;">⚡ Parametri Calcolati</h3>
+                                          <div style="background-color: #1e293b; padding: 20px; border-radius: 12px; margin-top: 10px;">
+                                            <p style="margin: 0 0 10px 0; font-size: 15px; border-bottom: 1px solid #0b0f19; padding-bottom: 8px; color: #ffffff;"><strong>Metabolismo Basale (BMR):</strong> <span style="color: #22d3ee; font-weight: 800;">${res.bmr} kcal</span></p>
+                                            <p style="margin: 10px 0; font-size: 15px; border-bottom: 1px solid #0b0f19; padding-bottom: 8px; color: #ffffff;"><strong>Fabbisogno Giornaliero (TDEE):</strong> <span style="color: #22d3ee; font-weight: 800;">${res.tdee} kcal</span></p>
+                                            <p style="margin: 10px 0 0 0; font-size: 16px; color: #14b8a6; font-weight: bold;">Budget Calorico Suggerito: <span style="color: #ffffff; font-size: 20px; font-weight: 900;">${res.kcalTarget} kcal/giorno</span></p>
+                                          </div>
+                                          
+                                          <h3 style="color: #14b8a6; margin-top: 30px;">🍞 Ripartizione Macronutrienti</h3>
+                                          <table style="width: 100%; border-collapse: collapse; margin-top: 10px; color: #ffffff;">
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #22d3ee;"><strong>Carboidrati:</strong></td><td style="padding: 8px 0; text-align: right; color: #ffffff;"><strong>${res.carboidratiGrams} g</strong></td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #14b8a6;"><strong>Proteine:</strong></td><td style="padding: 8px 0; text-align: right; color: #ffffff;"><strong>${res.proteineGrams} g</strong></td></tr>
+                                            <tr style="border-bottom: 1px solid #1e293b;"><td style="padding: 8px 0; color: #f43f5e;"><strong>Grassi:</strong></td><td style="padding: 8px 0; text-align: right; color: #ffffff;"><strong>${res.grassiGrams} g</strong></td></tr>
+                                          </table>
+                                          
+                                          <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 15px; text-align: center;">Inviato in tempo reale dall'algoritmo di MyDietPlan Pro.</p>
+                                        </div>
+                                      `
                                     })
                                   });
                                 } catch (err) {
@@ -2293,15 +2320,27 @@ export default function LandingPage() {
                       if (!contactName || !contactEmail || !contactMessage) return;
                       setContactLoading(true);
                       try {
-                        await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
+                        await fetch("/api/send", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                          headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
-                            _subject: `Messaggio dal Sito - di ${contactName} - MyDietPlan Pro`,
-                            nome: contactName,
-                            email: contactEmail,
-                            messaggio: contactMessage,
-                            tipo_form: "Contact Us Form (Landing Page)"
+                            subject: `✉️ Nuovo Messaggio di Contatto: ${contactName} - MyDietPlan Pro`,
+                            html: `
+                              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b0f19; color: #ffffff;">
+                                <h2 style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 10px; margin-top: 0;">MyDietPlan Pro - Modulo Contatti</h2>
+                                <p style="font-size: 15px; color: #ffffff;">Hai ricevuto un nuovo messaggio dal form di contatto della landing page:</p>
+                                
+                                <div style="background-color: #1e293b; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                                  <p style="margin: 0 0 10px 0; font-size: 14px; color: #94a3b8;"><strong>Inviato da:</strong> <span style="color: #ffffff; font-weight: bold;">${contactName}</span></p>
+                                  <p style="margin: 10px 0; font-size: 14px; color: #94a3b8;"><strong>Email:</strong> <a href="mailto:${contactEmail}" style="color: #22d3ee; text-decoration: none;">${contactEmail}</a></p>
+                                  <p style="margin: 15px 0 0 0; font-size: 15px; color: #ffffff; line-height: 1.5; border-top: 1px solid #0b0f19; padding-top: 10px;">
+                                    <strong>Messaggio:</strong><br />
+                                    ${contactMessage.replace(/\n/g, '<br />')}
+                                  </p>
+                                </div>
+                                <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 15px; text-align: center;">Inviato in tempo reale dal form di contatto di MyDietPlan Pro.</p>
+                              </div>
+                            `
                           })
                         });
                       } catch (err) {
@@ -2548,13 +2587,21 @@ export default function LandingPage() {
                       if (!footerEmail) return;
                       setFooterLoading(true);
                       try {
-                        await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
+                        await fetch("/api/send", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                          headers: { "Content-Type": "application/json" },
                           body: JSON.stringify({
-                            _subject: "Nuovo Lead - Pre-Footer (Prova 7 Giorni) - MyDietPlan Pro",
-                            email: footerEmail,
-                            tipo_form: "Signup Prova Gratis (Pre-Footer CTA)"
+                            subject: "⚡ Nuovo Lead: Prova 7 Giorni (Pre-Footer) - MyDietPlan Pro",
+                            html: `
+                              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e2e8f0; border-radius: 12px; background-color: #0b0f19; color: #ffffff;">
+                                <h2 style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 10px; margin-top: 0;">MyDietPlan Pro - Lead Capture</h2>
+                                <p style="font-size: 16px; line-height: 1.5; color: #ffffff;">Un utente ha richiesto di iniziare la <strong>Prova Gratuita di 7 Giorni</strong> dal blocco Pre-Footer CTA.</p>
+                                <div style="background-color: #1e293b; padding: 15px; border-radius: 8px; margin-top: 20px;">
+                                  <p style="margin: 0; font-size: 15px; color: #ffffff;"><strong>Indirizzo Email:</strong> <a href="mailto:${footerEmail}" style="color: #22d3ee; text-decoration: none;">${footerEmail}</a></p>
+                                </div>
+                                <p style="font-size: 12px; color: #94a3b8; margin-top: 30px; border-top: 1px solid #1e293b; padding-top: 10px; text-align: center;">Inviato automaticamente dal sito MyDietPlan Pro.</p>
+                              </div>
+                            `
                           })
                         });
                       } catch (err) {
@@ -3060,15 +3107,25 @@ export default function LandingPage() {
                   if (!modalEmail || !modalNome) return;
                   setModalLoading(true);
                   try {
-                    await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
+                    await fetch("/api/send", {
                       method: "POST",
-                      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                      headers: { "Content-Type": "application/json" },
                       body: JSON.stringify({
-                        _subject: `Richiesta Abbonamento (${modalPlan.toUpperCase()}) - MyDietPlan Pro`,
-                        nome: modalNome,
-                        email: modalEmail,
-                        piano_selezionato: modalPlan,
-                        tipo_form: "Checkout Modal Selection"
+                        subject: `💎 Richiesta Attivazione Abbonamento (${modalPlan.toUpperCase()}) - MyDietPlan Pro`,
+                        html: `
+                          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 25px; border: 1px solid #e2e8f0; border-radius: 16px; background-color: #0b0f19; color: #ffffff;">
+                            <h2 style="color: #22d3ee; border-bottom: 2px solid #22d3ee; padding-bottom: 10px; margin-top: 0;">MyDietPlan Pro - Richiesta Abbonamento</h2>
+                            <p style="font-size: 15px; color: #ffffff;">Un utente ha avviato una procedura di checkout per attivare un piano:</p>
+                            
+                            <div style="background-color: #1e293b; padding: 15px; border-radius: 10px; margin-top: 20px;">
+                              <p style="margin: 0 0 10px 0; font-size: 15px; color: #ffffff;"><strong>Piano Richiesto:</strong> <span style="color: #22d3ee; font-weight: bold; text-transform: uppercase;">${modalPlan}</span></p>
+                              <p style="margin: 10px 0; font-size: 15px; color: #ffffff;"><strong>Nome Cliente:</strong> <span style="color: #ffffff; font-weight: bold;">${modalNome}</span></p>
+                              <p style="margin: 10px 0 0 0; font-size: 15px; color: #ffffff;"><strong>Indirizzo Email:</strong> <a href="mailto:${modalEmail}" style="color: #22d3ee; text-decoration: none;">${modalEmail}</a></p>
+                            </div>
+                            
+                            <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 15px; text-align: center;">Inviato in tempo reale dalla simulazione checkout Lemon Squeezy.</p>
+                          </div>
+                        `
                       })
                     });
                   } catch (err) {
