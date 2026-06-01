@@ -678,7 +678,7 @@ export default function LandingPage() {
 
               {/* ACTION BUTTON */}
               <a 
-                href="https://mydietplan-pro.vercel.app/"
+                href="https://mydietplan-green.vercel.app/"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="glass glow-btn" 
@@ -928,7 +928,7 @@ export default function LandingPage() {
 
         {/* ACTION BUTTON MOBILE */}
         <a
-          href="https://mydietplan-pro.vercel.app/"
+          href="https://mydietplan-green.vercel.app/"
           target="_blank"
           rel="noopener noreferrer"
           onClick={() => setIsMobileMenuOpen(false)}
@@ -2289,6 +2289,117 @@ export default function LandingPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <ShieldCheck size={15} style={{ color: 'var(--accent-teal)' }} />
                   <span>{currentT.paymentGuaranteed}</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* INSTALLATION INSTRUCTIONS SECTION */}
+          <section id="install" style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.015)', background: 'rgba(255,255,255,0.002)' }}>
+            <div className="container" style={{ maxWidth: '1000px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '50px' }}>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {lang === 'it' ? 'INSTALLAZIONE ISTANTANEA (PWA)' : 'INSTANT INSTALLATION (PWA)'}
+                </span>
+                <h2 style={{ fontSize: 'calc(24px + 1vw)', fontWeight: '900', fontFamily: 'var(--font-title)', marginTop: '8px', color: '#fff' }}>
+                  {lang === 'it' ? 'Come installare MyDietPlan Pro sul tuo dispositivo' : 'How to install MyDietPlan Pro on your device'}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '600px', margin: '12px auto 0 auto', lineHeight: '1.5' }}>
+                  {lang === 'it' 
+                    ? 'Essendo una Progressive Web App (PWA) moderna, puoi installare MyDietPlan Pro direttamente dal tuo browser senza passare dagli store. È leggera, sicura e si aggiorna all\'istante!'
+                    : 'As a modern Progressive Web App (PWA), you can install MyDietPlan Pro directly from your browser without app stores. It is lightweight, secure, and updates instantly!'}
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                {/* PC & MAC */}
+                <div className="glass" style={{ padding: '30px 24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#06b6d4' }}>
+                      <span style={{ fontSize: '18px' }}>💻</span>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>PC & Mac (Desktop)</h3>
+                      <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '700' }}>Google Chrome / Edge</span>
+                    </div>
+                  </div>
+                  <ol style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Accedi all\'app web cliccando su "Accedi all\'App" in alto.' 
+                        : 'Access the web app by clicking "Open App" at the top.'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Nella barra degli indirizzi in alto a destra, clicca sull\'icona "Installa" (schermo con freccia) o sui tre puntini di Chrome.' 
+                        : 'In the address bar at the top right, click the "Install" icon (screen with arrow) or Chrome\'s three dots.'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Clicca su "Installa". L\'app comparirà all\'istante sul tuo desktop e nel dock!' 
+                        : 'Click "Install". The app will appear instantly on your desktop and dock!'}
+                    </li>
+                  </ol>
+                </div>
+
+                {/* ANDROID */}
+                <div className="glass" style={{ padding: '30px 24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}>
+                      <span style={{ fontSize: '18px' }}>🤖</span>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>Smartphone Android</h3>
+                      <span style={{ fontSize: '11px', color: 'var(--accent-teal)', fontWeight: '700' }}>Google Chrome / Samsung</span>
+                    </div>
+                  </div>
+                  <ol style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Apri il sito o l\'app web dal tuo cellulare.' 
+                        : 'Open the website or web app from your mobile phone.'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Attendi la comparsa del banner automatico in basso e clicca su "Aggiungi a schermata Home".' 
+                        : 'Wait for the automatic bottom banner to appear and click "Add to Home Screen".'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Se non compare, clicca sui tre puntini in alto a destra nel browser e seleziona "Installa app" o "Aggiungi a schermata Home".' 
+                        : 'If it doesn\'t appear, click the three dots at the top right of the browser and select "Install app" or "Add to Home Screen".'}
+                    </li>
+                  </ol>
+                </div>
+
+                {/* IOS */}
+                <div className="glass" style={{ padding: '30px 24px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.15)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24' }}>
+                      <span style={{ fontSize: '18px' }}>🍎</span>
+                    </div>
+                    <div>
+                      <h3 style={{ fontSize: '16px', fontWeight: '800', color: '#fff', margin: 0 }}>iPhone & iPad (iOS)</h3>
+                      <span style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700' }}>Apple Safari</span>
+                    </div>
+                  </div>
+                  <ol style={{ paddingLeft: '20px', margin: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '12.5px', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Apri il sito o l\'app web dal browser predefinito Safari.' 
+                        : 'Open the website or web app from the default Safari browser.'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Clicca sul pulsante di Condivisione (quadrato con freccia verso l\'alto) nel menu in basso.' 
+                        : 'Click the Share button (square with arrow pointing up) in the bottom menu.'}
+                    </li>
+                    <li>
+                      {lang === 'it' 
+                        ? 'Scorri il menu verso il basso e seleziona la voce "Aggiungi alla schermata Home".' 
+                        : 'Scroll down the menu and select "Add to Home Screen".'}
+                    </li>
+                  </ol>
                 </div>
               </div>
             </div>
