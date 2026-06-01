@@ -50,6 +50,22 @@ export default function LandingPage() {
   // Stato per le FAQ Accordion (memorizza gli ID aperti)
   const [openFaqId, setOpenFaqId] = useState<number | null>(null);
 
+  // Stato per il menu dropdown
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const handleScrollTo = (anchorId: string) => {
+    if (currentPage !== 'home') {
+      setCurrentPage('home');
+      setTimeout(() => {
+        const el = document.getElementById(anchorId);
+        if (el) el.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    } else {
+      const el = document.getElementById(anchorId);
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   // Forza lo scorrimento in cima alla pagina ad ogni cambio rotta o cambio passo
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -108,7 +124,7 @@ export default function LandingPage() {
     it: {
       metaTitle: 'MyDietPlan Pro - Il tuo corpo, progettato scientificamente',
       navFeatures: 'Funzioni',
-      navScreenshots: 'Screenshot',
+      navScreenshots: 'Esplora',
       navPricing: 'Prezzi',
       navFaq: 'FAQ',
       btnOpenApp: 'Accedi all\'App',
@@ -183,7 +199,7 @@ export default function LandingPage() {
     en: {
       metaTitle: 'MyDietPlan Pro - Your body, scientifically engineered',
       navFeatures: 'Features',
-      navScreenshots: 'Screenshots',
+      navScreenshots: 'Explore',
       navPricing: 'Pricing',
       navFaq: 'FAQ',
       btnOpenApp: 'Open App',
@@ -288,44 +304,192 @@ export default function LandingPage() {
         </div>
 
         {/* NAVIGATION LINKS */}
-        {currentPage === 'home' ? (
-          <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600' }} className="nav-links">
-            <a href="#features" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-              {currentT.navFeatures}
-            </a>
-            <a href="#screenshots" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-              {currentT.navScreenshots}
-            </a>
-            <a href="#pricing" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-              {currentT.navPricing}
-            </a>
-            <a href="#faq" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
-              {currentT.navFaq}
-            </a>
-          </nav>
-        ) : (
+        <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600', alignItems: 'center' }} className="nav-links">
+          {/* HOME */}
           <button 
-            type="button" 
+            type="button"
             onClick={() => setCurrentPage('home')}
-            style={{
+            style={{ 
               background: 'transparent',
               border: 'none',
               cursor: 'pointer',
-              color: 'var(--accent-cyan)',
               fontSize: '14px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
+              fontWeight: '600',
+              color: currentPage === 'home' ? 'var(--accent-cyan)' : 'var(--text-secondary)', 
+              transition: 'color 0.2s' 
             }}
-            onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
-            onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={(e) => {
+              if (currentPage !== 'home') e.currentTarget.style.color = 'var(--text-secondary)';
+            }}
           >
-            <ChevronLeft size={16} />
-            <span>{currentT.btnBackHome}</span>
+            Home
           </button>
-        )}
+
+          {/* DROPDOWN TRIGGER (FUNZIONI) */}
+          <div 
+            style={{ position: 'relative' }}
+            onMouseEnter={() => setIsDropdownOpen(true)}
+            onMouseLeave={() => setIsDropdownOpen(false)}
+          >
+            <button
+              type="button"
+              style={{
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                fontSize: '14px',
+                fontWeight: '600',
+                color: currentPage !== 'home' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                transition: 'color 0.2s'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+              onMouseLeave={(e) => {
+                if (currentPage === 'home') e.currentTarget.style.color = 'var(--text-secondary)';
+              }}
+            >
+              <span>{currentT.navFeatures}</span>
+              <ChevronDown size={14} style={{ 
+                transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', 
+                transition: 'transform 0.2s',
+                color: currentPage !== 'home' ? 'var(--accent-cyan)' : 'var(--text-muted)'
+              }} />
+            </button>
+
+            {/* DROPDOWN MENU */}
+            {isDropdownOpen && (
+              <div 
+                className="glass"
+                style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '55%',
+                  transform: 'translateX(-50%) translateY(8px)',
+                  width: '260px',
+                  padding: '8px',
+                  borderRadius: '12px',
+                  boxShadow: '0 15px 35px rgba(2, 6, 23, 0.9), 0 0 20px rgba(34, 211, 238, 0.05)',
+                  zIndex: 200,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '4px'
+                }}
+              >
+                {[
+                  { id: 'diet', icon: Apple, labelIt: '🍏 Diet Architect', labelEn: '🍏 Diet Architect' },
+                  { id: 'workout', icon: Dumbbell, labelIt: '🏋️ Workout Hub', labelEn: '🏋️ Workout Hub' },
+                  { id: 'body', icon: Ruler, labelIt: '📊 Composizione Corporea', labelEn: '📊 Body Composition' },
+                  { id: 'wellness', icon: Heart, labelIt: '🛌 Bio-Tracker & Sonno', labelEn: '🛌 Bio-Tracker & Sleep' },
+                  { id: 'mindfulness', icon: Wind, labelIt: '🌬️ Spazio Mindfulness', labelEn: '🌬️ Mindfulness Space' }
+                ].map((sub) => {
+                  const isCurrentSub = currentPage === sub.id;
+                  const Icon = sub.icon;
+                  return (
+                    <button
+                      key={sub.id}
+                      type="button"
+                      onClick={() => {
+                        setCurrentPage(sub.id as Page);
+                        setIsDropdownOpen(false);
+                      }}
+                      style={{
+                        background: isCurrentSub ? 'var(--cyan-glow)' : 'transparent',
+                        border: 'none',
+                        borderRadius: '8px',
+                        padding: '10px 14px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        fontSize: '13px',
+                        fontWeight: '700',
+                        color: isCurrentSub ? 'var(--accent-cyan)' : 'var(--text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.2s',
+                        width: '100%'
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCurrentSub) {
+                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
+                          e.currentTarget.style.color = 'var(--accent-cyan)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCurrentSub) {
+                          e.currentTarget.style.background = 'transparent';
+                          e.currentTarget.style.color = 'var(--text-primary)';
+                        }
+                      }}
+                    >
+                      <Icon size={14} style={{ color: isCurrentSub ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
+                      <span>{lang === 'it' ? sub.labelIt : sub.labelEn}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* EXPLORE (RENAMED FROM SCREENSHOTS) */}
+          <button 
+            type="button"
+            onClick={() => handleScrollTo('screenshots')}
+            style={{ 
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-secondary)', 
+              transition: 'color 0.2s' 
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          >
+            {currentT.navScreenshots}
+          </button>
+
+          {/* PRICING */}
+          <button 
+            type="button"
+            onClick={() => handleScrollTo('pricing')}
+            style={{ 
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-secondary)', 
+              transition: 'color 0.2s' 
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          >
+            {currentT.navPricing}
+          </button>
+
+          {/* FAQ */}
+          <button 
+            type="button"
+            onClick={() => handleScrollTo('faq')}
+            style={{ 
+              background: 'transparent',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: '600',
+              color: 'var(--text-secondary)', 
+              transition: 'color 0.2s' 
+            }}
+            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
+            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+          >
+            {currentT.navFaq}
+          </button>
+        </nav>
 
         {/* ACTIONS */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
