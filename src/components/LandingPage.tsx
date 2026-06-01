@@ -13,8 +13,24 @@ import {
   ShieldCheck, 
   Zap, 
   Star,
-  ArrowRight
+  ArrowRight,
+  ChevronDown,
+  ChevronUp,
+  HelpCircle,
+  Lock,
+  RefreshCw,
+  FileText
 } from 'lucide-react';
+import { 
+  dietSteps, 
+  workoutSteps, 
+  bodySteps, 
+  wellnessSteps, 
+  mindfulnessSteps, 
+  faqItems
+} from './TourData';
+import type { TourStep } from './TourData';
+
 
 type Language = 'it' | 'en';
 type Page = 'home' | 'diet' | 'workout' | 'body' | 'wellness' | 'mindfulness';
@@ -28,9 +44,16 @@ export default function LandingPage() {
   const [activeDesktopIdx, setActiveDesktopIdx] = useState(0);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
 
-  // Forza lo scorrimento in cima alla pagina ad ogni cambio rotta
+  // Stati per il Tour Interattivo nelle sottopagine
+  const [activeStepIdx, setActiveStepIdx] = useState(0);
+
+  // Stato per le FAQ Accordion (memorizza gli ID aperti)
+  const [openFaqId, setOpenFaqId] = useState<number | null>(null);
+
+  // Forza lo scorrimento in cima alla pagina ad ogni cambio rotta o cambio passo
   useEffect(() => {
     window.scrollTo(0, 0);
+    setActiveStepIdx(0); // Resetta il passo ad ogni cambio pagina
   }, [currentPage]);
 
   const desktopScreens = [
@@ -42,7 +65,7 @@ export default function LandingPage() {
 
   const mobileScreens = [
     { src: '/screenshots/mobile1.png', titleIt: 'Paywall & Premium', titleEn: 'Paywall & Premium' },
-    { src: '/screenshots/mobile2.png', titleIt: 'Registro Wellness', titleEn: 'Wellness Log' },
+    { src: '/screenshots/mobile2.png', titleIt: 'Registro Wellness & Allenamenti', titleEn: 'Wellness & Workouts Log' },
     { src: '/screenshots/mobile3.png', titleIt: 'Mindfulness & Sonno', titleEn: 'Mindfulness & Sleep' },
     { src: '/screenshots/mobile4.png', titleIt: 'Dieta Giornaliera', titleEn: 'Daily Diet' }
   ];
@@ -61,6 +84,25 @@ export default function LandingPage() {
     setActiveMobileIdx((prev) => (prev - 1 + mobileScreens.length) % mobileScreens.length);
   };
 
+  const toggleFaq = (id: number) => {
+    setOpenFaqId(openFaqId === id ? null : id);
+  };
+
+  // Ottieni i passi del tour in base alla pagina corrente
+  const getActiveSteps = (): TourStep[] => {
+    switch (currentPage) {
+      case 'diet': return dietSteps;
+      case 'workout': return workoutSteps;
+      case 'body': return bodySteps;
+      case 'wellness': return wellnessSteps;
+      case 'mindfulness': return mindfulnessSteps;
+      default: return [];
+    }
+  };
+
+  const activeSteps = getActiveSteps();
+  const currentStep = activeSteps[activeStepIdx] || null;
+
   // Testi tradotti
   const t = {
     it: {
@@ -68,6 +110,7 @@ export default function LandingPage() {
       navFeatures: 'Funzioni',
       navScreenshots: 'Screenshot',
       navPricing: 'Prezzi',
+      navFaq: 'FAQ',
       btnOpenApp: 'Accedi all\'App',
       btnBackHome: 'Torna alla Home',
       heroTag: 'L\'EVOLUZIONE DEL FITNESS LOCAL-FIRST',
@@ -122,8 +165,18 @@ export default function LandingPage() {
       featureExportDoc: 'Esportazione PDF/Word professionale delle diete',
       featureAllAccess: 'Accesso completo a Dieta, Allenamento e Pliche',
       featureNoAds: 'Nessuna pubblicità, 100% offline-first',
-      btnLearnMoreDetail: 'Approfondisci funzione',
+      btnLearnMoreDetail: 'Tour Interattivo e Screenshots',
       backToFeatures: 'Vedi le altre funzioni',
+      
+      tourHeaderTag: 'TOUR DI PRODOTTO PASSO-PASSO',
+      tourTitle: 'Scopri come funziona MyDietPlan Pro',
+      tourSub: 'Esplora l\'interfaccia reale dell\'app cliccando sui passaggi del tutorial. I mockup si aggiorneranno in tempo reale mostrando gli screenshot del software.',
+      tourInstructions: 'Clicca su un passo a sinistra per cambiare screenshot nei mockup a destra:',
+      tourPrev: 'Passo Prec',
+      tourNext: 'Passo Succ',
+      
+      secFaqTitle: 'Domande Frequenti (FAQ)',
+      secFaqSub: 'Hai dubbi su come funziona MyDietPlan Pro? Trova le risposte scientifiche e tecniche qui sotto.',
       
       footerText: '© 2026 MyDietPlan Pro. Progettato con passione per l\'ingegneria del corpo umano.'
     },
@@ -132,6 +185,7 @@ export default function LandingPage() {
       navFeatures: 'Features',
       navScreenshots: 'Screenshots',
       navPricing: 'Pricing',
+      navFaq: 'FAQ',
       btnOpenApp: 'Open App',
       btnBackHome: 'Back to Home',
       heroTag: 'THE LOCAL-FIRST FITNESS EVOLUTION',
@@ -186,8 +240,18 @@ export default function LandingPage() {
       featureExportDoc: 'Professional PDF/Word exports for diet sheets',
       featureAllAccess: 'Full access to Diet, Workouts, and Skinfolds Caliper',
       featureNoAds: 'Zero ads, 100% offline-first privacy',
-      btnLearnMoreDetail: 'Explore feature',
+      btnLearnMoreDetail: 'Interactive Tour & Screenshots',
       backToFeatures: 'See other features',
+      
+      tourHeaderTag: 'STEP-BY-STEP PRODUCT TOUR',
+      tourTitle: 'Discover how MyDietPlan Pro works',
+      tourSub: 'Explore the actual app interface by clicking through the tutorial steps. The mockups update in real-time showing software screenshots.',
+      tourInstructions: 'Click on a step on the left to change the screenshots in the mockups on the right:',
+      tourPrev: 'Prev Step',
+      tourNext: 'Next Step',
+      
+      secFaqTitle: 'Frequently Asked Questions (FAQ)',
+      secFaqSub: 'Have questions about MyDietPlan Pro? Find scientific and technical answers below.',
       
       footerText: '© 2026 MyDietPlan Pro. Engineered with passion for human performance.'
     }
@@ -234,6 +298,9 @@ export default function LandingPage() {
             </a>
             <a href="#pricing" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
               {currentT.navPricing}
+            </a>
+            <a href="#faq" style={{ color: 'var(--text-secondary)', transition: 'color 0.2s' }} onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'} onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}>
+              {currentT.navFaq}
             </a>
           </nav>
         ) : (
@@ -290,6 +357,8 @@ export default function LandingPage() {
           {/* ACTION BUTTON */}
           <a 
             href="https://mydietplan-pro.vercel.app/"
+            target="_blank"
+            rel="noopener noreferrer"
             className="glass" 
             style={{
               padding: '8px 16px',
@@ -375,7 +444,7 @@ export default function LandingPage() {
                 {currentT.heroSub}
               </p>
 
-              <div className="animate-fade-up" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center', marginTop: '16px', width: '100%', maxWidth: '400px' }}>
+              <div className="animate-fade-up" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center', marginTop: '16px', width: '100%', maxWidth: '450px' }}>
                 <a 
                   href="#pricing" 
                   className="btn btn-primary glow-btn" 
@@ -431,7 +500,7 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* DETTAGLI DELLE CARATTERISTICHE (FEATURES GRID) */}
+          {/* FEATURES GRID */}
           <section id="features" style={{ padding: '80px 24px', position: 'relative' }}>
             <div className="container">
               <div style={{ textAlign: 'center', marginBottom: '60px' }}>
@@ -624,7 +693,7 @@ export default function LandingPage() {
             </div>
           </section>
 
-          {/* SHOWCASE GALLERIA SCREENSHOT INTERATTIVA */}
+          {/* SCREENSHOTS SELECTOR */}
           <section id="screenshots" style={{ padding: '80px 24px', background: 'rgba(255, 255, 255, 0.005)', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
             <div className="container">
               <div style={{ textAlign: 'center', marginBottom: '40px' }}>
@@ -794,587 +863,472 @@ export default function LandingPage() {
             </div>
           </section>
 
-            {/* PRICING */}
-            <section id="pricing" style={{ padding: '80px 24px', position: 'relative' }}>
-              <div className="container">
-                <div style={{ textAlign: 'center', marginBottom: '60px' }}>
-                  <h2 style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
-                    {currentT.secPricingTitle}
-                  </h2>
-                  <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '550px', margin: '8px auto 0 auto' }}>
-                    {currentT.secPricingSub}
-                  </p>
+          {/* PRICING */}
+          <section id="pricing" style={{ padding: '80px 24px', position: 'relative' }}>
+            <div className="container">
+              <div style={{ textAlign: 'center', marginBottom: '60px' }}>
+                <h2 style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
+                  {currentT.secPricingTitle}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '550px', margin: '8px auto 0 auto' }}>
+                  {currentT.secPricingSub}
+                </p>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', alignItems: 'stretch', maxWidth: '1000px', margin: '0 auto' }}>
+                
+                {/* Piano Mensile */}
+                <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+                      {currentT.planMonthlyName}
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                      {currentT.planMonthlyDesc}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
+                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>9.99€</span>
+                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'mese' : 'month'}</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--accent-teal)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                    {currentT.trialNotice}
+                  </div>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                    {[
+                      currentT.featureUnlimitedProfiles,
+                      currentT.featureFullDiagnostics,
+                      currentT.featureAllAccess,
+                      currentT.featureCloudSync,
+                      currentT.featureNoAds
+                    ].map((f, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <Check size={14} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center' }}>
+                    {currentT.checkoutBtn}
+                  </a>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', alignItems: 'stretch', maxWidth: '1000px', margin: '0 auto' }}>
-                  
-                  {/* Piano Mensile */}
-                  <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
-                        {currentT.planMonthlyName}
-                      </h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
-                        {currentT.planMonthlyDesc}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                      <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>9.99€</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'mese' : 'month'}</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--accent-teal)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
-                      {currentT.trialNotice}
-                    </div>
-                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
-                      {[
-                        currentT.featureUnlimitedProfiles,
-                        currentT.featureFullDiagnostics,
-                        currentT.featureAllAccess,
-                        currentT.featureCloudSync,
-                        currentT.featureNoAds
-                      ].map((f, i) => (
-                        <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <Check size={14} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
-                          <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <a href="https://mydietplan-pro.vercel.app/" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)' }}>
-                      {currentT.checkoutBtn}
-                    </a>
+                {/* Piano Annuale (BEST VALUE) */}
+                <div className="glass pricing-card popular" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-teal)' }}>
+                      {currentT.planYearlyName}
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                      {currentT.planYearlyDesc}
+                    </p>
                   </div>
-
-                  {/* Piano Annuale (BEST VALUE) */}
-                  <div className="glass pricing-card popular" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-teal)' }}>
-                        {currentT.planYearlyName}
-                      </h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
-                        {currentT.planYearlyDesc}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                      <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>59.99€</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'anno' : 'year'}</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
-                      {currentT.trialNotice} (Risparmi 50%)
-                    </div>
-                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
-                      {[
-                        currentT.featureUnlimitedProfiles,
-                        currentT.featureFullDiagnostics,
-                        currentT.featureAllAccess,
-                        currentT.featureCloudSync,
-                        currentT.featureExportDoc,
-                        currentT.featureNoAds
-                      ].map((f, i) => (
-                        <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <Check size={14} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
-                          <span style={{ color: 'var(--text-primary)' }}>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <a href="https://mydietplan-pro.vercel.app/" className="btn btn-primary glow-btn" style={{ borderRadius: '12px', padding: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))', color: '#020617', boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)' }}>
-                      {currentT.checkoutBtn}
-                    </a>
+                  <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
+                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>59.99€</span>
+                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'anno' : 'year'}</span>
                   </div>
-
-                  {/* Piano Lifetime */}
-                  <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
-                    <div>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-gold)' }}>
-                        {currentT.planLifetimeName}
-                      </h3>
-                      <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
-                        {currentT.planLifetimeDesc}
-                      </p>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                      <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>99.99€</span>
-                      <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'una tantum' : 'one-time'}</span>
-                    </div>
-                    <div style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
-                      {currentT.lifetimeNotice}
-                    </div>
-                    <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
-                      {[
-                        currentT.featureUnlimitedProfiles,
-                        currentT.featureFullDiagnostics,
-                        currentT.featureAllAccess,
-                        currentT.featureCloudSync,
-                        currentT.featureExportDoc,
-                        currentT.featureNoAds
-                      ].map((f, i) => (
-                        <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <Check size={14} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
-                          <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
-                        </li>
-                      ))}
-                    </ul>
-                    <a href="https://mydietplan-pro.vercel.app/" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)' }}>
-                      {currentT.checkoutBtn}
-                    </a>
+                  <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                    {currentT.trialNotice} (Risparmi 50%)
                   </div>
-
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                    {[
+                      currentT.featureUnlimitedProfiles,
+                      currentT.featureFullDiagnostics,
+                      currentT.featureAllAccess,
+                      currentT.featureCloudSync,
+                      currentT.featureExportDoc,
+                      currentT.featureNoAds
+                    ].map((f, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <Check size={14} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-primary)' }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-primary glow-btn" style={{ borderRadius: '12px', padding: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))', color: '#020617', boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)', textAlign: 'center' }}>
+                    {currentT.checkoutBtn}
+                  </a>
                 </div>
 
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 30px', justifyContent: 'center', alignItems: 'center', marginTop: '40px', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'center' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <ShieldCheck size={15} style={{ color: 'var(--accent-teal)' }} />
-                    <span>{currentT.paymentGuaranteed}</span>
+                {/* Piano Lifetime */}
+                <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-gold)' }}>
+                      {currentT.planLifetimeName}
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                      {currentT.planLifetimeDesc}
+                    </p>
                   </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
+                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>99.99€</span>
+                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'una tantum' : 'one-time'}</span>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                    {currentT.lifetimeNotice}
+                  </div>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                    {[
+                      currentT.featureUnlimitedProfiles,
+                      currentT.featureFullDiagnostics,
+                      currentT.featureAllAccess,
+                      currentT.featureCloudSync,
+                      currentT.featureExportDoc,
+                      currentT.featureNoAds
+                    ].map((f, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <Check size={14} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center' }}>
+                    {currentT.checkoutBtn}
+                  </a>
+                </div>
+
+              </div>
+
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px 30px', justifyContent: 'center', alignItems: 'center', marginTop: '40px', color: 'var(--text-secondary)', fontSize: '12px', textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <ShieldCheck size={15} style={{ color: 'var(--accent-teal)' }} />
+                  <span>{currentT.paymentGuaranteed}</span>
                 </div>
               </div>
-            </section>
+            </div>
+          </section>
+
+          {/* FAQ SECTION */}
+          <section id="faq" style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
+            <div className="container" style={{ maxWidth: '800px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <h2 style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
+                  {currentT.secFaqTitle}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '8px auto 0 auto' }}>
+                  {currentT.secFaqSub}
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {faqItems.map((item) => {
+                  const isOpen = openFaqId === item.id;
+                  return (
+                    <div 
+                      key={item.id} 
+                      className="glass" 
+                      style={{ 
+                        borderRadius: '14px', 
+                        overflow: 'hidden', 
+                        borderColor: isOpen ? 'var(--accent-cyan)' : 'var(--border-color)',
+                        boxShadow: isOpen ? '0 0 20px rgba(34, 211, 238, 0.05)' : 'none'
+                      }}
+                    >
+                      <button 
+                        type="button" 
+                        onClick={() => toggleFaq(item.id)}
+                        style={{
+                          width: '100%',
+                          background: 'transparent',
+                          border: 'none',
+                          padding: '20px 24px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          cursor: 'pointer',
+                          color: isOpen ? 'var(--accent-cyan)' : 'var(--text-primary)',
+                          fontWeight: '700',
+                          fontSize: '15px',
+                          textAlign: 'left',
+                          transition: 'all 0.2s'
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <HelpCircle size={16} style={{ color: isOpen ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
+                          {lang === 'it' ? item.questionIt : item.questionEn}
+                        </span>
+                        {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                      </button>
+                      
+                      {isOpen && (
+                        <div style={{ 
+                          padding: '0 24px 20px 24px', 
+                          color: 'var(--text-secondary)', 
+                          fontSize: '13.5px', 
+                          lineHeight: '1.6',
+                          borderTop: '1px solid rgba(255,255,255,0.02)'
+                        }}>
+                          <div style={{ paddingTop: '16px' }}>
+                            {lang === 'it' ? item.answerIt : item.answerEn}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </section>
         </>
       ) : (
-        /* DETAIL SUBPAGES (Dettagli di Funzione) */
-        <div className="animate-fade-up" style={{ padding: '60px 24px 80px 24px', flex: 1 }}>
+        /* DETAIL TOUR SUBPAGE */
+        <div className="animate-fade-up" style={{ padding: '40px 24px 80px 24px', flex: 1 }}>
           <div className="container">
-            {(() => {
-              // Helper per renderizzare il layout affiancato Laptop + Smartphone mockup
-              const renderComparisonMockups = (laptopSrc: string, phoneSrc: string, title: string) => (
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '40px', 
-                  justifyContent: 'center', 
+            {/* Header di Sezione */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', marginBottom: '40px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '11px', letterSpacing: '1px', textTransform: 'uppercase' }}>
+                  {currentT.tourHeaderTag}
+                </span>
+                <h2 style={{ fontSize: 'calc(24px + 1vw)', fontWeight: '900', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
+                  {currentPage === 'diet' && (lang === 'it' ? '🍎 Diet Architect & Equalizzatore Kcal' : '🍎 Diet Architect & Kcal Equalizer')}
+                  {currentPage === 'workout' && (lang === 'it' ? '🏋️ Workout Planner & Timer MET' : '🏋️ Workout Planner & MET Timer')}
+                  {currentPage === 'body' && (lang === 'it' ? '📊 Composizione Corporea e Calibro' : '📊 Body Composition & Skinfold Caliper')}
+                  {currentPage === 'wellness' && (lang === 'it' ? '🛌 Bio-Tracker & Sleep Log' : '🛌 Bio-Tracker & Sleep Log')}
+                  {currentPage === 'mindfulness' && (lang === 'it' ? '🌬️ Spazio Mindfulness e Calma' : '🌬️ Mindfulness & Guided Breathing')}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14.5px', maxWidth: '650px', margin: 0 }}>
+                  {currentT.tourSub}
+                </p>
+              </div>
+              
+              <button 
+                type="button" 
+                onClick={() => setCurrentPage('home')}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid var(--border-color)',
+                  borderRadius: '10px',
+                  padding: '10px 20px',
+                  color: 'var(--text-primary)',
+                  fontWeight: '700',
+                  fontSize: '12px',
+                  cursor: 'pointer',
+                  display: 'flex',
                   alignItems: 'center',
-                  margin: '40px 0',
-                  width: '100%'
-                }}>
-                  {/* Laptop Mockup (Desktop screen) */}
-                  <div style={{ flex: '1 1 450px', maxWidth: '550px', minWidth: '280px' }}>
-                    <div className="laptop-mockup">
-                      <div className="laptop-screen">
-                        <img src={laptopSrc} alt={`${title} Desktop view`} />
-                      </div>
-                      <div className="laptop-base" />
-                    </div>
-                    <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      💻 Desktop Interface
-                    </div>
-                  </div>
+                  gap: '6px'
+                }}
+              >
+                <ChevronLeft size={14} />
+                <span>{currentT.backToFeatures}</span>
+              </button>
+            </div>
 
-                  {/* Phone Mockup (Mobile screen) */}
-                  <div style={{ flex: '0 1 250px' }}>
-                    <div className="phone-mockup">
-                      <img src={phoneSrc} alt={`${title} Mobile view`} className="phone-screen" />
+            {/* TOUR INTERATTIVO GRID */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '40px', alignItems: 'stretch' }}>
+              
+              {/* Colonna Sinistra: I passi del tour */}
+              <div style={{ flex: '1 1 350px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--text-muted)', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+                  {currentT.tourInstructions}
+                </span>
+
+                {activeSteps.map((step, idx) => {
+                  const isActive = activeStepIdx === idx;
+                  return (
+                    <div 
+                      key={idx}
+                      onClick={() => setActiveStepIdx(idx)}
+                      className="glass"
+                      style={{
+                        padding: '18px 20px',
+                        cursor: 'pointer',
+                        borderRadius: '14px',
+                        borderColor: isActive ? 'var(--accent-cyan)' : 'var(--border-color)',
+                        background: isActive ? 'rgba(34, 211, 238, 0.04)' : 'var(--card-bg)',
+                        boxShadow: isActive ? '0 0 15px rgba(34, 211, 238, 0.06), var(--shadow-lg)' : 'var(--shadow-lg)',
+                        transition: 'all 0.25s ease'
+                      }}
+                    >
+                      <h4 style={{ 
+                        fontSize: '14.5px', 
+                        fontWeight: '800', 
+                        color: isActive ? 'var(--accent-cyan)' : 'var(--text-primary)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        marginBottom: isActive ? '8px' : '0'
+                      }}>
+                        <span>{lang === 'it' ? step.titleIt : step.titleEn}</span>
+                        {isActive && <Sparkles size={13} style={{ color: 'var(--accent-cyan)' }} />}
+                      </h4>
+                      {isActive && (
+                        <p style={{ 
+                          color: 'var(--text-secondary)', 
+                          fontSize: '12.5px', 
+                          lineHeight: '1.6', 
+                          margin: 0,
+                          animation: 'fadeInUp 0.3s ease'
+                        }}>
+                          {lang === 'it' ? step.descIt : step.descEn}
+                        </p>
+                      )}
                     </div>
-                    <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      📱 Native Mobile View
-                    </div>
-                  </div>
+                  );
+                })}
+
+                {/* Controlli Prec / Succ */}
+                <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+                  <button 
+                    type="button"
+                    disabled={activeStepIdx === 0}
+                    onClick={() => setActiveStepIdx((prev) => Math.max(0, prev - 1))}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--border-color)',
+                      background: 'rgba(255,255,255,0.01)',
+                      color: activeStepIdx === 0 ? 'var(--text-muted)' : 'var(--text-secondary)',
+                      cursor: activeStepIdx === 0 ? 'not-allowed' : 'pointer',
+                      fontWeight: '700',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <ChevronLeft size={14} />
+                    <span>{currentT.tourPrev}</span>
+                  </button>
+                  <button 
+                    type="button"
+                    disabled={activeStepIdx === activeSteps.length - 1}
+                    onClick={() => setActiveStepIdx((prev) => Math.min(activeSteps.length - 1, prev + 1))}
+                    style={{
+                      flex: 1,
+                      padding: '10px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--border-color)',
+                      background: 'rgba(255,255,255,0.01)',
+                      color: activeStepIdx === activeSteps.length - 1 ? 'var(--text-muted)' : 'var(--text-secondary)',
+                      cursor: activeStepIdx === activeSteps.length - 1 ? 'not-allowed' : 'pointer',
+                      fontWeight: '700',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <span>{currentT.tourNext}</span>
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
-              );
+              </div>
 
-              // Helper per renderizzare solo il telefono mockup (per wellness/mindfulness)
-              const renderPhoneMockupOnly = (phoneSrc1: string, phoneSrc2: string | null, title: string) => (
-                <div style={{ 
-                  display: 'flex', 
-                  flexWrap: 'wrap', 
-                  gap: '40px', 
-                  justifyContent: 'center', 
-                  alignItems: 'center',
-                  margin: '40px 0',
-                  width: '100%'
-                }}>
-                  <div style={{ flex: '0 1 250px' }}>
-                    <div className="phone-mockup">
-                      <img src={phoneSrc1} alt={`${title} Screen 1`} className="phone-screen" />
+              {/* Colonna Destra: I mockup fisici con lo screenshot attivo */}
+              <div style={{ flex: '1.2 1 450px', display: 'flex', flexDirection: 'column', gap: '20px', justifyContent: 'center' }}>
+                {currentStep && (
+                  <div className="glass" style={{ padding: '30px', position: 'relative' }}>
+                    
+                    {/* Badge di Certificazione Tecnologica */}
+                    <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', marginBottom: '24px', fontSize: '11px', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-teal)' }}>
+                        <ShieldCheck size={14} />
+                        <span>LOCAL-FIRST ENCRYPTED</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)' }}>
+                        <RefreshCw size={13} className="animate-spin" style={{ animationDuration: '6s' }} />
+                        <span>SUPABASE SYNC READY</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-gold)' }}>
+                        <Lock size={12} />
+                        <span>100% OFFLINE PRIVACY</span>
+                      </div>
                     </div>
-                    <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                      📱 Interface Screen
+
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '30px', 
+                      justifyContent: 'center', 
+                      alignItems: 'center',
+                      width: '100%'
+                    }}>
+                      
+                      {/* Render Laptop Mockup se disponibile */}
+                      {currentStep.laptopSrc && (
+                        <div style={{ flex: '1 1 380px', maxWidth: '480px' }}>
+                          <div className="laptop-mockup">
+                            <div className="laptop-screen">
+                              <img src={currentStep.laptopSrc} alt={`${lang === 'it' ? currentStep.titleIt : currentStep.titleEn} Desktop`} />
+                            </div>
+                            <div className="laptop-base" />
+                          </div>
+                          <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '800', letterSpacing: '0.5px' }}>
+                            💻 DESKTOP INTERFACE
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Render Phone Mockup se disponibile */}
+                      {currentStep.phoneSrc && (
+                        <div style={{ flex: '0 1 180px' }}>
+                          <div className="phone-mockup" style={{ width: '190px', height: '380px', borderRadius: '28px', border: '7px solid #1e293b' }}>
+                            <img src={currentStep.phoneSrc} alt={`${lang === 'it' ? currentStep.titleIt : currentStep.titleEn} Mobile`} className="phone-screen" />
+                          </div>
+                          <div style={{ textAlign: 'center', fontSize: '10px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '800', letterSpacing: '0.5px' }}>
+                            📱 SMARTPHONE VIEW
+                          </div>
+                        </div>
+                      )}
+
                     </div>
+
+                    {/* Didascalia screenshot attivo */}
+                    <div style={{ 
+                      marginTop: '24px', 
+                      background: 'rgba(255,255,255,0.01)', 
+                      border: '1px solid var(--border-color)', 
+                      borderRadius: '10px', 
+                      padding: '12px 16px',
+                      fontSize: '12px',
+                      color: 'var(--accent-cyan)',
+                      textAlign: 'center',
+                      fontWeight: '700'
+                    }}>
+                      <span style={{ color: 'var(--text-muted)', marginRight: '6px' }}>ACTIVE SCREEN:</span>
+                      {lang === 'it' ? currentStep.titleIt.slice(3) : currentStep.titleEn.slice(3)}
+                    </div>
+
                   </div>
-                  {phoneSrc2 && (
-                    <div style={{ flex: '0 1 250px' }}>
-                      <div className="phone-mockup">
-                        <img src={phoneSrc2} alt={`${title} Screen 2`} className="phone-screen" />
-                      </div>
-                      <div style={{ textAlign: 'center', fontSize: '11px', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
-                        📱 Details Screen
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
+                )}
+              </div>
 
-              /* --- SUBPAGE: DIETA --- */
-              if (currentPage === 'diet') {
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>🍎 FUNCTION DEEP-DIVE</span>
-                      <h2 style={{ fontSize: 'calc(24px + 1.2vw)', fontWeight: '800', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
-                        {lang === 'it' ? 'Diet Architect & Equalizzatore Calorie' : 'Diet Architect & Calorie Equalizer'}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '700px' }}>
-                        {lang === 'it' 
-                          ? 'Crea piani alimentari flessibili ed intelligenti. La nostra tecnologia di equalizzazione ti permette di strutturare opzioni multiple all\'interno dello stesso pasto e riscalare le grammature all\'istante rispetto all\'alimento base.'
-                          : 'Build smart, flexible diet plans. Our calorie equalizer technology lets you build multiple alternatives for every meal and automatically rescale weight scales against your primary food option.'}
-                      </p>
-                    </div>
-
-                    {/* COMPARISON GLASS PANEL */}
-                    <div className="glass" style={{ padding: '30px', margin: '10px 0' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-cyan)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} />
-                        <span>{lang === 'it' ? 'L\'App in Azione su Tutti gli Schermi' : 'The App Active Across All Screens'}</span>
-                      </h3>
-                      {renderComparisonMockups('/screenshots/desktop3.jpg', '/screenshots/mobile4.png', 'Diet')}
-                    </div>
-
-                    {/* DETTAGLI METODOLOGIA SCIENTIFICA */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '10px' }}>
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Flessibilità Totale delle Portate' : 'Total Course Flexibility'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Dimentica le tabelle rigide dei nutrizionisti. Con il nostro pianificatore a scelta multipla, per ogni pasto (es. Pranzo) puoi definire portate personalizzate ed inserire infinite alternative di cibo, dando all\'utente finale la possibilità di scegliere cosa mangiare ogni giorno in totale autonomia.'
-                            : 'Forget rigid nutrition sheets. With our multi-choice planner, you can define custom courses for every meal and add endless alternatives, giving users the ultimate freedom to pick what to eat daily on their own.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Algoritmo di Auto-Equalizzazione' : 'Auto-Equalize Engine'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Vuoi sostituire 100g di riso con delle patate o con del pane? Cliccando sul pulsante "Bilancia Kcal", l\'app calcola all\'istante i fattori di conversione macro per riscalare automaticamente la grammatura delle opzioni secondarie in modo da pareggiare perfettamente l\'energia dell\'Opzione 1.'
-                            : 'Want to swap 100g of rice with potatoes or bread? Press the "Balance Kcal" button, and the app instantly calculates macro conversion factors to automatically scale second option gram scales to perfectly match Option 1\'s calories.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Esportazione in Formato PDF e Word' : 'PDF & Word Professional Exports'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Genera file PDF impaginati in modo professionale pronti per la stampa, oppure esporta in file Microsoft Word modificabili per consentire personalizzazioni esterne e condividerli istantaneamente con clienti o familiari via WhatsApp.'
-                            : 'Generate beautifully styled print-ready PDFs or export as editable Microsoft Word documents for external custom styles, allowing you to instantly share sheets with clients or family members via WhatsApp.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              /* --- SUBPAGE: WORKOUT --- */
-              if (currentPage === 'workout') {
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>💪 FUNCTION DEEP-DIVE</span>
-                      <h2 style={{ fontSize: 'calc(24px + 1.2vw)', fontWeight: '800', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
-                        {lang === 'it' ? 'Workout Hub & Calcolo Dispendio MET' : 'Workout Hub & MET Calories Burn'}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '700px' }}>
-                        {lang === 'it' 
-                          ? 'Costruisci la tua scheda d\'allenamento ideale. Traccia le tue sessioni impostando serie, ripetizioni, note e timer di recupero, valutando con precisione il dispendio calorico teorico stimato in base alle tue caratteristiche corporee.'
-                          : 'Engineer your perfect workout routine. Track training sessions by logging sets, reps, rest timers, and custom notes, evaluating caloric burn with absolute precision based on your unique biometric stats.'}
-                      </p>
-                    </div>
-
-                    {/* COMPARISON GLASS PANEL */}
-                    <div className="glass" style={{ padding: '30px', margin: '10px 0' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-cyan)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} />
-                        <span>{lang === 'it' ? 'L\'App in Azione su Tutti gli Schermi' : 'The App Active Across All Screens'}</span>
-                      </h3>
-                      {renderComparisonMockups('/screenshots/desktop4.jpg', '/screenshots/mobile2.png', 'Workout')}
-                    </div>
-
-                    {/* DETTAGLI METODOLOGIA SCIENTIFICA */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '10px' }}>
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Costruttore Schede Interattivo' : 'Interactive Routine Builder'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Organizza i tuoi allenamenti settimanali in split (es. Spinta, Trazione, Gambe). Aggiungi esercizi impostando serie, ripetizioni o durata, ordina i movimenti trascinandoli in drag-and-drop ed imposta note per ciascun esercizio.'
-                            : 'Organize your weekly workouts into clean splits (e.g., Push, Pull, Legs). Add exercises, log sets, reps, or time limits, easily sort workouts using modern drag-and-drop, and specify key notes for each entry.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Stima dell\'Energia in MET' : 'MET Calories Expenditure'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'L\'app integra i coefficienti scientifici MET (Equivalent Metabolic of Task) per ciascuna attività e calcola il dispendio calorico in base alla durata reale del tuo allenamento e al tuo peso corporeo attuale, fornendo una stima energetica realistica integrata nella Dashboard.'
-                            : 'The app embeds scientific MET (Metabolic Equivalent of Task) values for various activities and computes caloric burn against your training duration and current weight, presenting a realistic energy expenditure integrated in your Dashboard.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Timer di Recupero e Logs Storici' : 'Rest Timers & History Tracking'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Evita distrazioni in palestra. Utilizza il timer di recupero acustico e visivo integrato per tenere il tempo corretto tra i set e visualizza i grafici storici dell\'energia bruciata e dei carichi sollevati nel tempo.'
-                            : 'Say goodbye to gym distractions. Use our built-in audible and visual rest timer to stay on track between sets and evaluate historic trends of calories burned and weights lifted over time.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              /* --- SUBPAGE: BODY --- */
-              if (currentPage === 'body') {
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>📊 FUNCTION DEEP-DIVE</span>
-                      <h2 style={{ fontSize: 'calc(24px + 1.2vw)', fontWeight: '800', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
-                        {lang === 'it' ? 'Plicometria Scientifica & Mappa Biometrica' : 'Scientific Skinfolds Caliper & Biometrics'}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '700px' }}>
-                        {lang === 'it' 
-                          ? 'Il monitoraggio della composizione corporea più avanzato. Calcola la tua percentuale di grasso corporeo ed evoluzione del tessuto adiposo tramite formule scientifiche certificate e plicometria.'
-                          : 'The ultimate body composition tracking module. Estimate body fat percentages and adipose tissue trends using verified scientific formulas and skinfolds caliper data.'}
-                      </p>
-                    </div>
-
-                    {/* COMPARISON GLASS PANEL */}
-                    <div className="glass" style={{ padding: '30px', margin: '10px 0' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-cyan)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} />
-                        <span>{lang === 'it' ? 'L\'App in Azione su Tutti gli Schermi' : 'The App Active Across All Screens'}</span>
-                      </h3>
-                      {renderComparisonMockups('/screenshots/desktop2.jpg', '/screenshots/mobile2.png', 'Body')}
-                    </div>
-
-                    {/* DETTAGLI METODOLOGIA SCIENTIFICA */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '10px' }}>
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Protocollo Plicometrico Jackson-Pollock' : 'Jackson-Pollock Skinfolds Protocol'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'L\'app implementa gli algoritmi a 3 pliche (Petto, Addome, Coscia per uomo; Tricipite, Sovrailiaca, Coscia per donna) ed a 7 pliche per stimare con precisione clinica la densità corporea, scorporando il tuo peso in Massa Grassa (Kg) e Massa Magra (Kg) visibili nel donut chart.'
-                            : 'The app implements 3-point (Chest, Abdomen, Thigh for men; Triceps, Suprailiac, Thigh for women) and 7-point formulas to calculate body density, splitting total weight into active Fat Mass (Kg) and Lean Mass (Kg) in our glass donut chart.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Grafici Millimetrati (mm) & Andamento' : 'Millimetric Charts (mm) & Trends'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Niente più unità di misura errate o stime casuali. Il trend delle pliche ti consente di visualizzare lo spessore esatto dei tessuti in millimetri (mm) nel tempo, monitorando con grafici neon interattivi dove stai effettivamente perdendo grasso.'
-                            : 'No more wrong units or wild guesses. The skinfolds tracker displays tissue thickness in exact millimeters (mm) over time, utilizing interactive neon charts to let you see where you are dropping fat.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Simmetria Arti & WHR biometria' : 'Limb Symmetry & WHR Diagnostics'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Rileva asimmetrie muscolari confrontando le circonferenze di braccia e cosce destre/sinistre, calcola l\'indice vita-fianchi (WHR) per la valutazione del rischio cardiovascolare e visualizza le variazioni totali nella bellissima mappa corporea biometrica 3D.'
-                            : 'Detect muscle imbalances by comparing left/right arm and thigh circumferences, calculate waist-to-hip ratio (WHR) for cardiovascular health assessment, and track overall changes inside the beautiful 3D biometric body map.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              /* --- SUBPAGE: WELLNESS --- */
-              if (currentPage === 'wellness') {
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>🛌 FUNCTION DEEP-DIVE</span>
-                      <h2 style={{ fontSize: 'calc(24px + 1.2vw)', fontWeight: '800', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
-                        {lang === 'it' ? 'Bio-Tracker & Registro Sonno' : 'Bio-Tracker & Sleep Logger'}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '700px' }}>
-                        {lang === 'it' 
-                          ? 'Il benessere va oltre le calorie. Tieni traccia dei parametri fisiologici più importanti per valutare lo stress sistemico, il recupero del sistema nervoso autonomo e lo stato di salute generale.'
-                          : 'Wellness goes beyond calories. Track the most important physiological biomarkers to evaluate systemic fatigue, autonomic nervous system recovery, and overall health status.'}
-                      </p>
-                    </div>
-
-                    {/* COMPARISON GLASS PANEL */}
-                    <div className="glass" style={{ padding: '30px', margin: '10px 0' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-cyan)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} />
-                        <span>{lang === 'it' ? 'L\'App in Azione' : 'The App in Action'}</span>
-                      </h3>
-                      {renderPhoneMockupOnly('/screenshots/mobile2.png', '/screenshots/mobile3.png', 'Wellness')}
-                    </div>
-
-                    {/* DETTAGLI METODOLOGIA SCIENTIFICA */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '10px' }}>
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Valutazione Sonno & HRV' : 'Sleep Quality & HRV Analysis'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Registra la durata del sonno e la sua qualità percepita (rating a stelle). Traccia i bio-parametri avanzati come la variabilità della frequenza cardiaca (HRV) e la frequenza cardiaca a riposo (RHR), indicatori diretti del recupero muscolare e neurologico.'
-                            : 'Log sleep duration and perceived sleep quality (star ratings). Track advanced biomarkers like heart rate variability (HRV) and resting heart rate (RHR), key diagnostic tools for muscular and autonomic recovery.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Parametri Vitali & Diagnostica' : 'Vital Signs & Health Indicators'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Inserisci e monitora la pressione arteriosa sistolica e diastolica, i livelli di saturazione dell\'ossigeno (SpO2), la glicemia a digiuno e la temperatura corporea basale, prevenendo affaticamento sistemico o sovrallenamento (overtraining).'
-                            : 'Enter and log systolic/diastolic blood pressure, oxygen saturation levels (SpO2), fasting glucose, and basal body temperature, avoiding systemic chronic fatigue or athletic overtraining.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Tracciamento Acqua e Passi' : 'Hydration & Daily Steps Tracker'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Mantieni uno stile di vita attivo e ben idratato. Imposta i tuoi target giornalieri nel pannello di onboarding, registra i bicchieri d\'acqua consumati (in ml) e segna i passi effettuati per un monitoraggio coerente della NEAT.'
-                            : 'Maintain an active lifestyle and stay well hydrated. Define your daily goals in the onboarding layout, log water intake (in ml), and record daily steps for precise NEAT evaluation.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              /* --- SUBPAGE: MINDFULNESS --- */
-              if (currentPage === 'mindfulness') {
-                return (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                    {/* Header */}
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                      <span style={{ color: 'var(--accent-cyan)', fontWeight: '800', fontSize: '12px', letterSpacing: '1px', textTransform: 'uppercase' }}>🌬️ FUNCTION DEEP-DIVE</span>
-                      <h2 style={{ fontSize: 'calc(24px + 1.2vw)', fontWeight: '800', fontFamily: 'var(--font-title)', lineHeight: '1.2' }}>
-                        {lang === 'it' ? 'Spazio Mindfulness & Respirazione Guidata' : 'Mindfulness Space & Guided Breathing'}
-                      </h2>
-                      <p style={{ color: 'var(--text-secondary)', fontSize: '15px', maxWidth: '700px' }}>
-                        {lang === 'it' 
-                          ? 'Allena la mente tanto quanto il tuo corpo. Riduci lo stress, abbassa i livelli di cortisolo ematico e stimola il sistema nervoso parasimpatico con sessioni di respirazione guidate da un pacer visivo fluente.'
-                          : 'Train your mind as much as your physique. Reduce daily stress, lower cortisol levels, and trigger parasympathetic nervous system activity using guided breathing sessions with our custom paced visual rings.'}
-                      </p>
-                    </div>
-
-                    {/* COMPARISON GLASS PANEL */}
-                    <div className="glass" style={{ padding: '30px', margin: '10px 0' }}>
-                      <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'var(--accent-cyan)', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={18} />
-                        <span>{lang === 'it' ? 'L\'App in Azione' : 'The App in Action'}</span>
-                      </h3>
-                      {renderPhoneMockupOnly('/screenshots/mobile3.png', null, 'Mindfulness')}
-                    </div>
-
-                    {/* DETTAGLI METODOLOGIA SCIENTIFICA */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', marginTop: '10px' }}>
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Tecniche di Respirazione Certificate' : 'Clinically Proven Breathing Methods'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Scegli tra i protocolli più efficaci per l\'allineamento cardiaco e la calma: Box Breathing (4s inspira, 4s trattieni, 4s espira, 4s trattieni), la respirazione calmante 4-7-8, o la tecnica Ujjayi yogica, ciascuna completa di spiegazioni terapeutiche integrate.'
-                            : 'Choose from the most effective protocols for cardiac alignment and relaxation: Box Breathing (4s inhale, 4s hold, 4s exhale, 4s hold), the ultra-calming 4-7-8, or yogic Ujjayi breathing, each with integrated therapeutic descriptions.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Pacer Biometrico Visivo Fluido' : 'Smooth Paced Biometric Guide'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Segui il pacer circolare che si allarga e si restringe con un\'animazione pulsante morbida in stile "respiro vitale". Le indicazioni testuali a schermo e i segnali visivi ti aiutano a sincronizzare il respiro istante per istante senza distrazioni.'
-                            : 'Follow our circular pace ring that expands and shrinks with a soft "breath of life" pulsing animation. Clear textual cues and visual markers help you synchronize your breath second by second without external distractions.'}
-                        </p>
-                      </div>
-
-                      <div className="glass" style={{ padding: '24px' }}>
-                        <h4 style={{ fontSize: '15px', fontWeight: '700', color: 'var(--text-primary)', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          <Check size={16} style={{ color: 'var(--accent-teal)' }} />
-                          <span>{lang === 'it' ? 'Controllo dello Stress ed Umore' : 'Stress Reduction & Mood Balance'}</span>
-                        </h4>
-                        <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6' }}>
-                          {lang === 'it'
-                            ? 'Conserva traccia della meditazione svolta (in minuti) e associa emoji di stato per l\'umore quotidiano. Ridurre lo stress promuove una corretta idratazione cellulare ed una ottimale risintesi proteica durante le fasi di riposo muscolare.'
-                            : 'Keep log details of mindful meditation (in minutes) and associate status emojis for daily mood logs. Lowering daily stress levels boosts cellular hydration and protein synthesis during vital resting phases.'}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                );
-              }
-
-              return null;
-            })()}
+            </div>
 
             {/* SEZIONE INFERIORE DI RITORNO / PROMO (Mostrata in fondo a tutte le sottopagine) */}
             <div className="glass" style={{ 
               marginTop: '40px', 
-              padding: '30px', 
+              padding: '40px 30px', 
               display: 'flex', 
               flexDirection: 'column', 
               alignItems: 'center', 
               gap: '16px',
               textAlign: 'center'
             }}>
-              <h3 style={{ fontSize: '20px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
-                {lang === 'it' ? 'Sblocca il Potenziale Completo di MyDietPlan Pro' : 'Unlock the Full Potential of MyDietPlan Pro'}
+              <h3 style={{ fontSize: '22px', fontWeight: '900', fontFamily: 'var(--font-title)', color: 'var(--text-primary)' }}>
+                {lang === 'it' ? 'Pronto a progettare il tuo corpo scientificamente?' : 'Ready to scientifically engineer your body?'}
               </h3>
-              <p style={{ color: 'var(--text-secondary)', fontSize: '13px', maxWidth: '500px', margin: 0 }}>
+              <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '550px', margin: 0, lineHeight: '1.6' }}>
                 {lang === 'it'
-                  ? 'Inizia oggi il tuo percorso scientifico. Abbonati ad un piano o acquista una volta sola con Lemon Squeezy.'
-                  : 'Start your scientific fitness journey today. Subscribe to a flexible plan or buy once with Lemon Squeezy.'}
+                  ? 'Sblocca il potenziale completo di MyDietPlan Pro. Inizia la tua prova gratuita di 7 giorni o sblocca la licenza Premium a vita.'
+                  : 'Unlock the complete biological power of MyDietPlan Pro. Start your 7-day free trial or claim your lifetime Premium access.'}
               </p>
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', marginTop: '6px' }}>
                 <button 
                   type="button" 
                   onClick={() => setCurrentPage('home')}
                   style={{
                     background: 'rgba(255,255,255,0.03)',
                     border: '1px solid var(--border-color)',
-                    padding: '10px 20px',
-                    borderRadius: '10px',
+                    padding: '12px 24px',
+                    borderRadius: '11px',
                     color: 'var(--text-primary)',
                     fontWeight: '700',
-                    fontSize: '12px',
+                    fontSize: '12.5px',
                     cursor: 'pointer'
                   }}
                 >
@@ -1382,40 +1336,66 @@ export default function LandingPage() {
                 </button>
                 <a 
                   href="#pricing"
-                  onClick={() => setCurrentPage('home')}
-                  className="btn btn-primary"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setCurrentPage('home');
+                    setTimeout(() => {
+                      document.getElementById('pricing')?.scrollIntoView({ behavior: 'smooth' });
+                    }, 50);
+                  }}
+                  className="btn btn-primary glow-btn"
                   style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    fontWeight: '700',
-                    fontSize: '12px',
                     background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
-                    color: '#020617'
+                    color: '#020617',
+                    padding: '12px 24px',
+                    borderRadius: '11px',
+                    fontWeight: '800',
+                    fontSize: '12.5px',
+                    boxShadow: '0 4px 15px rgba(34, 211, 238, 0.25)',
+                    textAlign: 'center'
                   }}
                 >
-                  {currentT.navPricing}
+                  {lang === 'it' ? 'Vedi Abbonamenti e Prezzi' : 'View Subscriptions & Pricing'}
                 </a>
               </div>
             </div>
+
           </div>
         </div>
       )}
 
       {/* FOOTER */}
-      <footer style={{ marginTop: 'auto', borderTop: '1px solid var(--border-color)', padding: '30px 24px', textAlign: 'center', background: 'rgba(2, 6, 23, 0.8)' }}>
-        <div className="container" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', opacity: 0.8 }}>
-            <svg width="24" height="24" viewBox="0 0 100 100" style={{ filter: 'drop-shadow(0 0 6px rgba(34, 211, 238, 0.6))' }}>
-              <circle cx="50" cy="50" r="46" fill="radial-gradient(circle at 50% 50%, #082f49 0%, #020617 100%)" stroke="var(--accent-cyan)" strokeWidth="3" />
-              <circle cx="50" cy="54" r="12" fill="radial-gradient(circle, #ffffff 0%, #06b6d4 100%)" />
-            </svg>
-            <span style={{ fontSize: '14px', fontWeight: '800', fontFamily: 'var(--font-title)', letterSpacing: '0.5px' }}>
+      <footer style={{ 
+        marginTop: 'auto', 
+        padding: '30px 24px', 
+        textAlign: 'center', 
+        borderTop: '1px solid var(--border-color)',
+        background: 'rgba(2, 6, 23, 0.7)'
+      }}>
+        <div className="container" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+            <span style={{ fontSize: '14px', fontWeight: '800', fontFamily: 'var(--font-title)', color: 'var(--text-primary)' }}>
               MyDietPlan <span style={{ color: 'var(--accent-cyan)' }}>Pro</span>
             </span>
+            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--text-muted)' }} />
+            <span style={{ fontSize: '12px', color: 'var(--accent-teal)', fontWeight: '700' }}>
+              LOCAL-FIRST & SECURE
+            </span>
           </div>
-          <p style={{ fontSize: '11px', color: 'var(--text-muted)', maxWidth: '400px', lineHeight: '1.5' }}>
+          <p style={{ color: 'var(--text-muted)', fontSize: '11.5px', margin: 0 }}>
             {currentT.footerText}
           </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <ShieldCheck size={12} style={{ color: 'var(--accent-teal)' }} />
+              Merchant of Record: Lemon Squeezy
+            </span>
+            <span>•</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <FileText size={12} />
+              IT/EN Multilingual Support
+            </span>
+          </div>
         </div>
       </footer>
 
