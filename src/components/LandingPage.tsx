@@ -2246,7 +2246,7 @@ export default function LandingPage() {
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>359.99€</span>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>129.99€</span>
                     <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'una tantum' : 'one-time'}</span>
                   </div>
                   <div style={{ fontSize: '10.5px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
@@ -3149,7 +3149,7 @@ export default function LandingPage() {
                       {modalPlan === 'trial' && (lang === 'it' ? '7 Giorni Prova Gratis — 0.00€' : '7-Day Free Trial — 0.00€')}
                       {modalPlan === 'monthly' && (lang === 'it' ? 'Premium Mensile — Prova 7 Giorni gratis (poi 9.99€/mese)' : 'Premium Monthly — 7 Days Trial free (then 9.99€/mo)')}
                       {modalPlan === 'yearly' && (lang === 'it' ? 'Premium Annuale — Prova 7 Giorni gratis (poi 59.99€/anno)' : 'Premium Yearly — 7 Days Trial free (then 59.99€/yr)')}
-                      {modalPlan === 'lifetime' && (lang === 'it' ? 'Premium Lifetime — Pagamento Unico 359.99€' : 'Premium Lifetime — One-time 359.99€')}
+                      {modalPlan === 'lifetime' && (lang === 'it' ? 'Premium Lifetime — Pagamento Unico 129.99€' : 'Premium Lifetime — One-time 129.99€')}
                     </span>
                   </div>
                 </div>
