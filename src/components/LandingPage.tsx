@@ -82,6 +82,17 @@ function calcolaBmrETdeeLocal(peso: number, altezza: number, eta: number, sesso:
   };
 }
 
+// ============================================================================
+// CONFIGURAZIONE LINK DI CHECKOUT LEMON SQUEEZY
+// Sostituisci questi URL temporanei con quelli reali non appena avrai creato
+// i prodotti all'interno della tua dashboard di Lemon Squeezy.
+// ============================================================================
+const LEMON_SQUEEZY_CHECKOUT_URLS = {
+  monthly: "https://katalystcode.lemonsqueezy.com/checkout/buy/100d5e69-fc9c-4b58-a105-e5d295317336",
+  yearly: "https://katalystcode.lemonsqueezy.com/checkout/buy/416e640a-5105-4c15-9a93-10de16f7a32a",
+  lifetime: "https://katalystcode.lemonsqueezy.com/checkout/buy/40334f9e-cb2f-477c-9508-1bfa4d6b54d6"
+};
+
 export default function LandingPage() {
   const [lang, setLang] = useState<Language>('it');
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -2174,11 +2185,7 @@ export default function LandingPage() {
                   <button 
                     type="button" 
                     onClick={() => {
-                      setModalPlan('monthly');
-                      setIsModalOpen(true);
-                      setModalSuccess(false);
-                      setModalEmail('');
-                      setModalNome('');
+                      window.location.href = LEMON_SQUEEZY_CHECKOUT_URLS.monthly;
                     }}
                     className="btn btn-secondary" 
                     style={{ borderRadius: '10px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center', fontSize: '12px', cursor: 'pointer' }}
@@ -2222,11 +2229,7 @@ export default function LandingPage() {
                   <button 
                     type="button" 
                     onClick={() => {
-                      setModalPlan('yearly');
-                      setIsModalOpen(true);
-                      setModalSuccess(false);
-                      setModalEmail('');
-                      setModalNome('');
+                      window.location.href = LEMON_SQUEEZY_CHECKOUT_URLS.yearly;
                     }}
                     className="btn btn-primary glow-btn" 
                     style={{ borderRadius: '10px', padding: '12px', fontWeight: '800', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))', color: '#020617', boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)', textAlign: 'center', fontSize: '12px', cursor: 'pointer', border: 'none' }}
@@ -2270,11 +2273,7 @@ export default function LandingPage() {
                   <button 
                     type="button" 
                     onClick={() => {
-                      setModalPlan('lifetime');
-                      setIsModalOpen(true);
-                      setModalSuccess(false);
-                      setModalEmail('');
-                      setModalNome('');
+                      window.location.href = LEMON_SQUEEZY_CHECKOUT_URLS.lifetime;
                     }}
                     className="btn btn-secondary" 
                     style={{ borderRadius: '10px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center', fontSize: '12px', cursor: 'pointer' }}
