@@ -1370,7 +1370,7 @@ export default function LandingPage() {
                         type="text" 
                         value={calcNome} 
                         onChange={(e) => setCalcNome(e.target.value)} 
-                        placeholder={lang === 'it' ? 'es. Daniele' : 'e.g. Daniele'}
+                        placeholder={lang === 'it' ? 'Metti qui il tuo Nome' : 'Enter your Name here'}
                         style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px' }} 
                       />
                     </div>
@@ -1390,7 +1390,7 @@ export default function LandingPage() {
                             fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px'
                           }}
                         >
-                          🙋‍♂️ {lang === 'it' ? 'Umono' : 'Male'}
+                          🙋‍♂️ {lang === 'it' ? 'Uomo' : 'Male'}
                         </button>
                         <button
                           type="button"
