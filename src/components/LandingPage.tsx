@@ -1026,7 +1026,7 @@ export default function LandingPage() {
                     if (!heroEmail) return;
                     setHeroLoading(true);
                     try {
-                      await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                      await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
                         method: "POST",
                         headers: { "Content-Type": "application/json", "Accept": "application/json" },
                         body: JSON.stringify({
@@ -1766,7 +1766,7 @@ export default function LandingPage() {
                                 if (!calcEmail) return;
                                 setCalcLoading(true);
                                 try {
-                                  await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                                  await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
                                     method: "POST",
                                     headers: { "Content-Type": "application/json", "Accept": "application/json" },
                                     body: JSON.stringify({
@@ -2293,7 +2293,7 @@ export default function LandingPage() {
                       if (!contactName || !contactEmail || !contactMessage) return;
                       setContactLoading(true);
                       try {
-                        await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                        await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
                           method: "POST",
                           headers: { "Content-Type": "application/json", "Accept": "application/json" },
                           body: JSON.stringify({
@@ -2548,7 +2548,7 @@ export default function LandingPage() {
                       if (!footerEmail) return;
                       setFooterLoading(true);
                       try {
-                        await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                        await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
                           method: "POST",
                           headers: { "Content-Type": "application/json", "Accept": "application/json" },
                           body: JSON.stringify({
@@ -3060,7 +3060,7 @@ export default function LandingPage() {
                   if (!modalEmail || !modalNome) return;
                   setModalLoading(true);
                   try {
-                    await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                    await fetch("https://formspree.io/info.dottdanielegabrovec@gmail.com", {
                       method: "POST",
                       headers: { "Content-Type": "application/json", "Accept": "application/json" },
                       body: JSON.stringify({
