@@ -386,9 +386,9 @@ export default function LandingPage() {
                   <div 
                     style={{
                       position: 'absolute',
-                      top: '100%',
-                      left: '55%',
-                      transform: 'translateX(-50%) translateY(8px)',
+                      top: 'calc(100% - 2px)', /* SOVRAPPOSIZIONE DI 2PX PER EVITARE GAP */
+                      left: '50%', /* PERFETTAMENTE CENTRATO */
+                      transform: 'translateX(-50%)', /* RIMOSSO IL GAP VERTICALE */
                       width: '260px',
                       padding: '8px',
                       borderRadius: '12px',
