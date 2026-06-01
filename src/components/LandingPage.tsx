@@ -121,6 +121,13 @@ export default function LandingPage() {
   const [footerSuccess, setFooterSuccess] = useState(false);
   const [footerLoading, setFooterLoading] = useState(false);
   
+  // Form 5: Contact Form
+  const [contactName, setContactName] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactMessage, setContactMessage] = useState('');
+  const [contactSuccess, setContactSuccess] = useState(false);
+  const [contactLoading, setContactLoading] = useState(false);
+  
   // Stati per i caroselli della Homepage
   const [activeDesktopIdx, setActiveDesktopIdx] = useState(0);
   const [activeMobileIdx, setActiveMobileIdx] = useState(0);
@@ -297,6 +304,16 @@ export default function LandingPage() {
       secFaqTitle: 'Domande Frequenti (FAQ)',
       secFaqSub: 'Hai dubbi su come funziona MyDietPlan Pro? Trova le risposte scientifiche e tecniche qui sotto.',
       
+      navContact: 'Contatti',
+      secContactTitle: 'Contatta il Supporto',
+      secContactSub: 'Hai domande sulle formule o hai bisogno di assistenza? Invia un messaggio diretto al dott. Daniele Gabrovec all\'indirizzo info.dottdanielegabrovec@gmail.com.',
+      contactNameLabel: 'Il tuo Nome',
+      contactEmailLabel: 'Indirizzo Email',
+      contactMessageLabel: 'Il tuo Messaggio (Scrivi qui le tue domande)',
+      contactSendBtn: 'Invia Messaggio al Dott. Gabrovec',
+      contactSuccessTitle: 'MESSAGGIO INVIATO CON SUCCESSO!',
+      contactSuccessDesc: 'Grazie! Il tuo messaggio è stato inviato a info.dottdanielegabrovec@gmail.com. Riceverai risposta al più presto!',
+      
       footerText: '© 2026 MyDietPlan Pro. Progettato con passione per l\'ingegneria del corpo umano.'
     },
     en: {
@@ -376,6 +393,16 @@ export default function LandingPage() {
       
       secFaqTitle: 'Frequently Asked Questions (FAQ)',
       secFaqSub: 'Have questions about MyDietPlan Pro? Find scientific and technical answers below.',
+      
+      navContact: 'Contact',
+      secContactTitle: 'Contact Support',
+      secContactSub: 'Have questions about the plans or need assistance? Send a direct message to Dr. Daniele Gabrovec at info.dottdanielegabrovec@gmail.com.',
+      contactNameLabel: 'Your Name',
+      contactEmailLabel: 'Email Address',
+      contactMessageLabel: 'Your Message (Write your questions here)',
+      contactSendBtn: 'Send Message to Dr. Gabrovec',
+      contactSuccessTitle: 'MESSAGE SENT SUCCESSFULLY!',
+      contactSuccessDesc: 'Thank you! Your message has been sent to info.dottdanielegabrovec@gmail.com. You will receive a response shortly!',
       
       footerText: '© 2026 MyDietPlan Pro. Engineered with passion for human performance.'
     }
@@ -581,6 +608,25 @@ export default function LandingPage() {
                 onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
               >
                 {currentT.navPricing}
+              </button>
+
+              {/* CONTACT */}
+              <button 
+                type="button"
+                onClick={() => handleScrollTo('contact')}
+                style={{ 
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#94a3b8', 
+                  transition: 'color 0.2s' 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {currentT.navContact}
               </button>
 
               {/* FAQ */}
@@ -836,6 +882,28 @@ export default function LandingPage() {
           💎 {currentT.navPricing}
         </button>
 
+        {/* CONTACT LINK */}
+        <button
+          type="button"
+          onClick={() => {
+            handleScrollTo('contact');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            textAlign: 'left',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#f8fafc',
+            width: '100%'
+          }}
+        >
+          ✉️ {currentT.navContact}
+        </button>
+
         {/* FAQ LINK */}
         <button
           type="button"
@@ -953,14 +1021,26 @@ export default function LandingPage() {
               {!heroSuccess ? (
                 <form 
                   className="animate-fade-up animate-pulse-glow" 
-                  onSubmit={(e) => {
+                  onSubmit={async (e) => {
                     e.preventDefault();
                     if (!heroEmail) return;
                     setHeroLoading(true);
-                    setTimeout(() => {
+                    try {
+                      await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                        body: JSON.stringify({
+                          _subject: "Nuovo Lead - Hero (Prova 7 Giorni) - MyDietPlan Pro",
+                          email: heroEmail,
+                          tipo_form: "Signup Prova Gratis (Hero Block)"
+                        })
+                      });
+                    } catch (err) {
+                      console.error("Hero form submission failed", err);
+                    } finally {
                       setHeroLoading(false);
                       setHeroSuccess(true);
-                    }, 1200);
+                    }
                   }}
                   style={{ 
                     display: 'flex', 
@@ -1681,14 +1761,39 @@ export default function LandingPage() {
                           {/* FORM 2: Trial Calculator Signup Form */}
                           {!calcSuccess ? (
                             <form 
-                              onSubmit={(e) => {
+                              onSubmit={async (e) => {
                                 e.preventDefault();
                                 if (!calcEmail) return;
                                 setCalcLoading(true);
-                                setTimeout(() => {
+                                try {
+                                  await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                                    method: "POST",
+                                    headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                                    body: JSON.stringify({
+                                      _subject: `Nuovo Lead - Calcolatore BMR & Macro - MyDietPlan Pro`,
+                                      email: calcEmail,
+                                      nome: calcNome || "Utente Calcolatore",
+                                      sesso: calcSesso === 'm' ? 'Uomo' : 'Donna',
+                                      eta: calcEta,
+                                      altezza: `${calcAltezza} cm`,
+                                      peso: `${calcPeso} kg`,
+                                      attivita: calcAttivita,
+                                      obiettivo: calcGoal,
+                                      BMR: `${res.bmr} kcal`,
+                                      TDEE: `${res.tdee} kcal`,
+                                      kcal_target: `${res.kcalTarget} kcal`,
+                                      carboidrati: `${res.carboidratiGrams} g`,
+                                      proteine: `${res.proteineGrams} g`,
+                                      grassi: `${res.grassiGrams} g`,
+                                      tipo_form: "BMR Calculator Results Lead"
+                                    })
+                                  });
+                                } catch (err) {
+                                  console.error("Calculator form submission failed", err);
+                                } finally {
                                   setCalcLoading(false);
                                   setCalcSuccess(true);
-                                }, 1200);
+                                }
                               }}
                               style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}
                             >
@@ -2162,6 +2267,175 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* CONTACT SUPPORT SECTION */}
+          <section id="contact" style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
+            <div className="container" style={{ maxWidth: '800px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <h2 style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
+                  {currentT.secContactTitle}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: '8px auto 0 auto', maxWidth: '600px', lineHeight: '1.6' }}>
+                  {currentT.secContactSub}
+                </p>
+              </div>
+
+              <div className="glass" style={{ 
+                padding: '40px', 
+                borderRadius: '24px', 
+                background: 'linear-gradient(180deg, rgba(8, 47, 73, 0.1) 0%, rgba(9, 13, 22, 0.4) 100%)', 
+                border: '1px solid rgba(34, 211, 238, 0.15)', 
+                boxShadow: '0 20px 50px rgba(0, 0, 0, 0.6), 0 0 30px rgba(34, 211, 238, 0.03)'
+              }}>
+                {!contactSuccess ? (
+                  <form 
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      if (!contactName || !contactEmail || !contactMessage) return;
+                      setContactLoading(true);
+                      try {
+                        await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                          body: JSON.stringify({
+                            _subject: `Messaggio dal Sito - di ${contactName} - MyDietPlan Pro`,
+                            nome: contactName,
+                            email: contactEmail,
+                            messaggio: contactMessage,
+                            tipo_form: "Contact Us Form (Landing Page)"
+                          })
+                        });
+                      } catch (err) {
+                        console.error("Contact form submission failed", err);
+                      } finally {
+                        setContactLoading(false);
+                        setContactSuccess(true);
+                      }
+                    }}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
+                  >
+                    <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap: '16px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {currentT.contactNameLabel}
+                        </label>
+                        <input 
+                          type="text" 
+                          required 
+                          placeholder={lang === 'it' ? 'Metti qui il tuo Nome' : 'Enter your Name here'}
+                          value={contactName}
+                          onChange={(e) => setContactName(e.target.value)}
+                          style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px', fontFamily: 'inherit' }}
+                        />
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {currentT.contactEmailLabel}
+                        </label>
+                        <input 
+                          type="email" 
+                          required 
+                          placeholder={lang === 'it' ? 'la-tua-email@esempio.com' : 'your-email@example.com'}
+                          value={contactEmail}
+                          onChange={(e) => setContactEmail(e.target.value)}
+                          style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px', fontFamily: 'inherit' }}
+                        />
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                        {currentT.contactMessageLabel}
+                      </label>
+                      <textarea 
+                        required 
+                        rows={5}
+                        placeholder={lang === 'it' ? 'Come posso aiutarti? Descrivi qui la tua richiesta...' : 'How can we help you? Describe your request here...'}
+                        value={contactMessage}
+                        onChange={(e) => setContactMessage(e.target.value)}
+                        style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '12px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px', fontFamily: 'inherit', resize: 'vertical' }}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit" 
+                      disabled={contactLoading}
+                      className="glow-btn"
+                      style={{
+                        padding: '14px 28px',
+                        borderRadius: '12px',
+                        border: '1px solid var(--accent-cyan)',
+                        background: 'rgba(34, 211, 238, 0.08)',
+                        color: 'var(--accent-cyan)',
+                        fontSize: '14px',
+                        fontWeight: '800',
+                        cursor: contactLoading ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 0 15px rgba(34, 211, 238, 0.1)',
+                        transition: 'all 0.2s',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        width: '100%',
+                        marginTop: '10px'
+                      }}
+                    >
+                      {contactLoading ? (
+                        <>
+                          <div className="spinner" style={{ width: '18px', height: '18px', border: '2px solid rgba(34, 211, 238, 0.3)', borderTopColor: 'var(--accent-cyan)', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                          <span>{lang === 'it' ? 'Invio in corso...' : 'Sending...'}</span>
+                        </>
+                      ) : (
+                        <span>{currentT.contactSendBtn}</span>
+                      )}
+                    </button>
+                  </form>
+                ) : (
+                  <div className="animate-scalein" style={{ textAlign: 'center', padding: '20px 0' }}>
+                    <div style={{ fontSize: '48px', marginBottom: '16px' }}>✉️</div>
+                    <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'var(--accent-cyan)', textShadow: '0 0 10px rgba(34, 211, 238, 0.2)' }}>
+                      {currentT.contactSuccessTitle}
+                    </h3>
+                    <p style={{ color: '#fff', fontSize: '14px', marginTop: '10px', lineHeight: '1.6', maxWidth: '500px', margin: '10px auto 0 auto' }}>
+                      {currentT.contactSuccessDesc}
+                    </p>
+                    <button 
+                      type="button" 
+                      onClick={() => {
+                        setContactName('');
+                        setContactEmail('');
+                        setContactMessage('');
+                        setContactSuccess(false);
+                      }}
+                      style={{
+                        marginTop: '24px',
+                        background: 'transparent',
+                        border: '1px solid var(--border-color)',
+                        borderRadius: '10px',
+                        padding: '8px 20px',
+                        color: 'var(--text-secondary)',
+                        fontSize: '12px',
+                        fontWeight: '700',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.color = '#fff';
+                        e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.color = 'var(--text-secondary)';
+                        e.currentTarget.style.borderColor = 'var(--border-color)';
+                      }}
+                    >
+                      {lang === 'it' ? 'Invia un altro messaggio' : 'Send another message'}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          </section>
+
           {/* FAQ SECTION */}
           <section id="faq" style={{ padding: '80px 24px', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
             <div className="container" style={{ maxWidth: '800px' }}>
@@ -2269,14 +2543,26 @@ export default function LandingPage() {
 
                 {!footerSuccess ? (
                   <form 
-                    onSubmit={(e) => {
+                    onSubmit={async (e) => {
                       e.preventDefault();
                       if (!footerEmail) return;
                       setFooterLoading(true);
-                      setTimeout(() => {
+                      try {
+                        await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                          body: JSON.stringify({
+                            _subject: "Nuovo Lead - Pre-Footer (Prova 7 Giorni) - MyDietPlan Pro",
+                            email: footerEmail,
+                            tipo_form: "Signup Prova Gratis (Pre-Footer CTA)"
+                          })
+                        });
+                      } catch (err) {
+                        console.error("Pre-footer form submission failed", err);
+                      } finally {
                         setFooterLoading(false);
                         setFooterSuccess(true);
-                      }, 1200);
+                      }
                     }}
                     style={{ 
                       display: 'flex', 
@@ -2769,14 +3055,28 @@ export default function LandingPage() {
 
             {!modalSuccess ? (
               <form 
-                onSubmit={(e) => {
+                onSubmit={async (e) => {
                   e.preventDefault();
                   if (!modalEmail || !modalNome) return;
                   setModalLoading(true);
-                  setTimeout(() => {
+                  try {
+                    await fetch("https://formsubmit.co/ajax/info.dottdanielegabrovec@gmail.com", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+                      body: JSON.stringify({
+                        _subject: `Richiesta Abbonamento (${modalPlan.toUpperCase()}) - MyDietPlan Pro`,
+                        nome: modalNome,
+                        email: modalEmail,
+                        piano_selezionato: modalPlan,
+                        tipo_form: "Checkout Modal Selection"
+                      })
+                    });
+                  } catch (err) {
+                    console.error("Checkout form submission failed", err);
+                  } finally {
                     setModalLoading(false);
                     setModalSuccess(true);
-                  }, 1200);
+                  }
                 }}
                 style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
               >
@@ -2804,7 +3104,7 @@ export default function LandingPage() {
                   <input 
                     type="text" 
                     required 
-                    placeholder={lang === 'it' ? 'es. Daniele' : 'e.g. Daniele'}
+                    placeholder={lang === 'it' ? 'Metti qui il tuo Nome' : 'Enter your Name here'}
                     value={modalNome}
                     onChange={(e) => setModalNome(e.target.value)}
                     style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '13px', fontFamily: 'inherit' }}
