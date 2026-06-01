@@ -258,3 +258,10 @@ a {
   transition: all 0.3s ease;
   margin-bottom: 16px;
 }
+
+/* Global button override to ensure browser defaults don't break text legibility */
+button {
+  font-family: inherit;
+  color: inherit;
+}
+

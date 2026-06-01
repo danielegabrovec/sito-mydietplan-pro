@@ -19,7 +19,9 @@ import {
   HelpCircle,
   Lock,
   RefreshCw,
-  FileText
+  FileText,
+  Menu,
+  X
 } from 'lucide-react';
 import { 
   dietSteps, 
@@ -53,6 +55,22 @@ export default function LandingPage() {
   // Stato per il menu dropdown
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
 
+  // Stati per il layout responsive mobile
+  const [isMobile, setIsMobile] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 950);
+      if (window.innerWidth >= 950) {
+        setIsMobileMenuOpen(false);
+      }
+    };
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const handleScrollTo = (anchorId: string) => {
     if (currentPage !== 'home') {
       setCurrentPage('home');
@@ -70,6 +88,7 @@ export default function LandingPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
     setActiveStepIdx(0); // Resetta il passo ad ogni cambio pagina
+    setIsMobileMenuOpen(false); // Chiude il menu mobile ad ogni cambio pagina
   }, [currentPage]);
 
   const desktopScreens = [
@@ -303,243 +322,477 @@ export default function LandingPage() {
           </span>
         </div>
 
-        {/* NAVIGATION LINKS */}
-        <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600', alignItems: 'center' }} className="nav-links">
-          {/* HOME */}
-          <button 
-            type="button"
-            onClick={() => setCurrentPage('home')}
-            style={{ 
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: currentPage === 'home' ? 'var(--accent-cyan)' : 'var(--text-secondary)', 
-              transition: 'color 0.2s' 
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => {
-              if (currentPage !== 'home') e.currentTarget.style.color = 'var(--text-secondary)';
-            }}
-          >
-            Home
-          </button>
-
-          {/* DROPDOWN TRIGGER (FUNZIONI) */}
-          <div 
-            style={{ position: 'relative' }}
-            onMouseEnter={() => setIsDropdownOpen(true)}
-            onMouseLeave={() => setIsDropdownOpen(false)}
-          >
-            <button
-              type="button"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                cursor: 'pointer',
-                fontSize: '14px',
-                fontWeight: '600',
-                color: currentPage !== 'home' ? 'var(--accent-cyan)' : 'var(--text-secondary)',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                transition: 'color 0.2s'
-              }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-              onMouseLeave={(e) => {
-                if (currentPage === 'home') e.currentTarget.style.color = 'var(--text-secondary)';
-              }}
-            >
-              <span>{currentT.navFeatures}</span>
-              <ChevronDown size={14} style={{ 
-                transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', 
-                transition: 'transform 0.2s',
-                color: currentPage !== 'home' ? 'var(--accent-cyan)' : 'var(--text-muted)'
-              }} />
-            </button>
-
-            {/* DROPDOWN MENU */}
-            {isDropdownOpen && (
-              <div 
-                className="glass"
-                style={{
-                  position: 'absolute',
-                  top: '100%',
-                  left: '55%',
-                  transform: 'translateX(-50%) translateY(8px)',
-                  width: '260px',
-                  padding: '8px',
-                  borderRadius: '12px',
-                  boxShadow: '0 15px 35px rgba(2, 6, 23, 0.9), 0 0 20px rgba(34, 211, 238, 0.05)',
-                  zIndex: 200,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px'
+        {/* NAVIGATION LINKS & ACTIONS */}
+        {!isMobile ? (
+          <>
+            {/* DESKTOP NAV LINKS */}
+            <nav style={{ display: 'flex', gap: '24px', fontSize: '14px', fontWeight: '600', alignItems: 'center' }} className="nav-links">
+              {/* HOME */}
+              <button 
+                type="button"
+                onClick={() => setCurrentPage('home')}
+                style={{ 
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: currentPage === 'home' ? '#22d3ee' : '#94a3b8', 
+                  transition: 'color 0.2s' 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                onMouseLeave={(e) => {
+                  if (currentPage !== 'home') e.currentTarget.style.color = '#94a3b8';
                 }}
               >
-                {[
-                  { id: 'diet', icon: Apple, labelIt: '🍏 Diet Architect', labelEn: '🍏 Diet Architect' },
-                  { id: 'workout', icon: Dumbbell, labelIt: '🏋️ Workout Hub', labelEn: '🏋️ Workout Hub' },
-                  { id: 'body', icon: Ruler, labelIt: '📊 Composizione Corporea', labelEn: '📊 Body Composition' },
-                  { id: 'wellness', icon: Heart, labelIt: '🛌 Bio-Tracker & Sonno', labelEn: '🛌 Bio-Tracker & Sleep' },
-                  { id: 'mindfulness', icon: Wind, labelIt: '🌬️ Spazio Mindfulness', labelEn: '🌬️ Mindfulness Space' }
-                ].map((sub) => {
-                  const isCurrentSub = currentPage === sub.id;
-                  const Icon = sub.icon;
-                  return (
-                    <button
-                      key={sub.id}
-                      type="button"
-                      onClick={() => {
-                        setCurrentPage(sub.id as Page);
-                        setIsDropdownOpen(false);
-                      }}
-                      style={{
-                        background: isCurrentSub ? 'var(--cyan-glow)' : 'transparent',
-                        border: 'none',
-                        borderRadius: '8px',
-                        padding: '10px 14px',
-                        cursor: 'pointer',
-                        textAlign: 'left',
-                        fontSize: '13px',
-                        fontWeight: '700',
-                        color: isCurrentSub ? 'var(--accent-cyan)' : 'var(--text-primary)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'all 0.2s',
-                        width: '100%'
-                      }}
-                      onMouseEnter={(e) => {
-                        if (!isCurrentSub) {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.03)';
-                          e.currentTarget.style.color = 'var(--accent-cyan)';
-                        }
-                      }}
-                      onMouseLeave={(e) => {
-                        if (!isCurrentSub) {
-                          e.currentTarget.style.background = 'transparent';
-                          e.currentTarget.style.color = 'var(--text-primary)';
-                        }
-                      }}
-                    >
-                      <Icon size={14} style={{ color: isCurrentSub ? 'var(--accent-cyan)' : 'var(--text-muted)' }} />
-                      <span>{lang === 'it' ? sub.labelIt : sub.labelEn}</span>
-                    </button>
-                  );
-                })}
+                Home
+              </button>
+
+              {/* DROPDOWN TRIGGER (FUNZIONI) */}
+              <div 
+                style={{ position: 'relative' }}
+                onMouseEnter={() => setIsDropdownOpen(true)}
+                onMouseLeave={() => setIsDropdownOpen(false)}
+              >
+                <button
+                  type="button"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '14px',
+                    fontWeight: '600',
+                    color: currentPage !== 'home' ? '#22d3ee' : '#94a3b8',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                  onMouseLeave={(e) => {
+                    if (currentPage === 'home') e.currentTarget.style.color = '#94a3b8';
+                  }}
+                >
+                  <span>{currentT.navFeatures}</span>
+                  <ChevronDown size={14} style={{ 
+                    transform: isDropdownOpen ? 'rotate(180deg)' : 'rotate(0)', 
+                    transition: 'transform 0.2s',
+                    color: currentPage !== 'home' ? '#22d3ee' : '#64748b'
+                  }} />
+                </button>
+
+                {/* DROPDOWN MENU - COMPLETAMENTE OPACO E AD ALTO CONTRASTO */}
+                {isDropdownOpen && (
+                  <div 
+                    style={{
+                      position: 'absolute',
+                      top: '100%',
+                      left: '55%',
+                      transform: 'translateX(-50%) translateY(8px)',
+                      width: '260px',
+                      padding: '8px',
+                      borderRadius: '12px',
+                      background: '#090d16', /* OPACO SOLID DI SFONDO */
+                      border: '1px solid rgba(34, 211, 238, 0.3)', /* BORDO NEON FORTE */
+                      boxShadow: '0 20px 40px rgba(0, 0, 0, 0.9), 0 0 25px rgba(34, 211, 238, 0.1)',
+                      zIndex: 1000,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '4px'
+                    }}
+                  >
+                    {[
+                      { id: 'diet', icon: Apple, labelIt: '🍏 Diet Architect', labelEn: '🍏 Diet Architect' },
+                      { id: 'workout', icon: Dumbbell, labelIt: '🏋️ Workout Hub', labelEn: '🏋️ Workout Hub' },
+                      { id: 'body', icon: Ruler, labelIt: '📊 Composizione Corporea', labelEn: '📊 Body Composition' },
+                      { id: 'wellness', icon: Heart, labelIt: '🛌 Bio-Tracker & Sonno', labelEn: '🛌 Bio-Tracker & Sleep' },
+                      { id: 'mindfulness', icon: Wind, labelIt: '🌬️ Spazio Mindfulness', labelEn: '🌬️ Mindfulness Space' }
+                    ].map((sub) => {
+                      const isCurrentSub = currentPage === sub.id;
+                      const Icon = sub.icon;
+                      return (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onClick={() => {
+                            setCurrentPage(sub.id as Page);
+                            setIsDropdownOpen(false);
+                          }}
+                          style={{
+                            background: isCurrentSub ? 'rgba(34, 211, 238, 0.1)' : 'transparent',
+                            border: 'none',
+                            borderRadius: '8px',
+                            padding: '10px 14px',
+                            cursor: 'pointer',
+                            textAlign: 'left',
+                            fontSize: '13px',
+                            fontWeight: '700',
+                            color: isCurrentSub ? '#22d3ee' : '#f8fafc', /* TESTO CHIARISSIMO AD ALTO CONTRASTO */
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.2s',
+                            width: '100%'
+                          }}
+                          onMouseEnter={(e) => {
+                            if (!isCurrentSub) {
+                              e.currentTarget.style.background = 'rgba(255, 255, 255, 0.05)';
+                              e.currentTarget.style.color = '#22d3ee';
+                            }
+                          }}
+                          onMouseLeave={(e) => {
+                            if (!isCurrentSub) {
+                              e.currentTarget.style.background = 'transparent';
+                              e.currentTarget.style.color = '#f8fafc';
+                            }
+                          }}
+                        >
+                          <Icon size={14} style={{ color: isCurrentSub ? '#22d3ee' : '#64748b' }} />
+                          <span>{lang === 'it' ? sub.labelIt : sub.labelEn}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* EXPLORE */}
+              <button 
+                type="button"
+                onClick={() => handleScrollTo('screenshots')}
+                style={{ 
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#94a3b8', 
+                  transition: 'color 0.2s' 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {currentT.navScreenshots}
+              </button>
+
+              {/* PRICING */}
+              <button 
+                type="button"
+                onClick={() => handleScrollTo('pricing')}
+                style={{ 
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#94a3b8', 
+                  transition: 'color 0.2s' 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {currentT.navPricing}
+              </button>
+
+              {/* FAQ */}
+              <button 
+                type="button"
+                onClick={() => handleScrollTo('faq')}
+                style={{ 
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '14px',
+                  fontWeight: '600',
+                  color: '#94a3b8', 
+                  transition: 'color 0.2s' 
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                {currentT.navFaq}
+              </button>
+            </nav>
+
+            {/* DESKTOP ACTIONS */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              {/* LANGUAGE PICKER */}
+              <button 
+                type="button" 
+                onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
+                style={{
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.08)',
+                  borderRadius: '8px',
+                  padding: '6px 12px',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  fontSize: '11px',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.2s'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.borderColor = '#22d3ee'}
+                onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'}
+              >
+                <Globe size={13} style={{ color: '#22d3ee' }} />
+                <span>{lang.toUpperCase()}</span>
+              </button>
+
+              {/* ACTION BUTTON */}
+              <a 
+                href="https://mydietplan-pro.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="glass glow-btn" 
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '10px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  borderColor: 'rgba(34, 211, 238, 0.4)',
+                  background: 'rgba(34, 211, 238, 0.05)',
+                  color: '#22d3ee',
+                  cursor: 'pointer',
+                  boxShadow: '0 0 10px rgba(34, 211, 238, 0.1)',
+                  transition: 'all 0.2s'
+                }}
+              >
+                {currentT.btnOpenApp}
+              </a>
+            </div>
+          </>
+        ) : (
+          /* MOBILE HEADER CONTROLS */
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* LANGUAGE PICKER (sempre visibile) */}
+            <button 
+              type="button" 
+              onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
+              style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                padding: '6px 12px',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                fontSize: '11px',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              <Globe size={12} style={{ color: '#22d3ee' }} />
+              <span>{lang.toUpperCase()}</span>
+            </button>
+
+            {/* HAMBURGER TOGGLE BUTTON */}
+            <button
+              type="button"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              style={{
+                background: 'rgba(255,255,255,0.04)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '8px',
+                padding: '8px',
+                cursor: 'pointer',
+                color: '#22d3ee',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'all 0.2s'
+              }}
+            >
+              {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+            </button>
           </div>
-
-          {/* EXPLORE (RENAMED FROM SCREENSHOTS) */}
-          <button 
-            type="button"
-            onClick={() => handleScrollTo('screenshots')}
-            style={{ 
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--text-secondary)', 
-              transition: 'color 0.2s' 
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-          >
-            {currentT.navScreenshots}
-          </button>
-
-          {/* PRICING */}
-          <button 
-            type="button"
-            onClick={() => handleScrollTo('pricing')}
-            style={{ 
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--text-secondary)', 
-              transition: 'color 0.2s' 
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-          >
-            {currentT.navPricing}
-          </button>
-
-          {/* FAQ */}
-          <button 
-            type="button"
-            onClick={() => handleScrollTo('faq')}
-            style={{ 
-              background: 'transparent',
-              border: 'none',
-              cursor: 'pointer',
-              fontSize: '14px',
-              fontWeight: '600',
-              color: 'var(--text-secondary)', 
-              transition: 'color 0.2s' 
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.color = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
-          >
-            {currentT.navFaq}
-          </button>
-        </nav>
-
-        {/* ACTIONS */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {/* LANGUAGE PICKER */}
-          <button 
-            type="button" 
-            onClick={() => setLang(lang === 'it' ? 'en' : 'it')}
-            style={{
-              background: 'rgba(255,255,255,0.03)',
-              border: '1px solid var(--border-color)',
-              borderRadius: '8px',
-              padding: '6px 12px',
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              fontSize: '11px',
-              fontWeight: '700',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.2s'
-            }}
-            onMouseEnter={(e) => e.currentTarget.style.borderColor = 'var(--accent-cyan)'}
-            onMouseLeave={(e) => e.currentTarget.style.borderColor = 'var(--border-color)'}
-          >
-            <Globe size={13} style={{ color: 'var(--accent-cyan)' }} />
-            <span>{lang.toUpperCase()}</span>
-          </button>
-
-          {/* ACTION BUTTON */}
-          <a 
-            href="https://mydietplan-pro.vercel.app/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="glass" 
-            style={{
-              padding: '8px 16px',
-              borderRadius: '10px',
-              fontSize: '12px',
-              fontWeight: '700',
-              borderColor: 'rgba(34, 211, 238, 0.4)',
-              background: 'rgba(34, 211, 238, 0.05)',
-              color: 'var(--accent-cyan)',
-              cursor: 'pointer',
-              boxShadow: '0 0 10px rgba(34, 211, 238, 0.1)'
-            }}
-          >
-            {currentT.btnOpenApp}
-          </a>
-        </div>
+        )}
       </header>
+
+    {/* MOBILE DROPDOWN NAVIGATION OVERLAY (COMPLETAMENTE OPACO, PREMIUM E AD ALTO CONTRASTO) */}
+    {isMobile && isMobileMenuOpen && (
+      <div 
+        style={{
+          position: 'fixed',
+          top: '80px',
+          left: '16px',
+          right: '16px',
+          background: '#090d16', /* OPACO AL 100% */
+          border: '1px solid rgba(34, 211, 238, 0.4)',
+          borderRadius: '16px',
+          padding: '24px',
+          boxShadow: '0 25px 60px rgba(0,0,0,0.95), 0 0 35px rgba(34, 211, 238, 0.15)',
+          zIndex: 9999,
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '20px',
+          animation: 'fadeInUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards'
+        }}
+      >
+        {/* HOME LINK */}
+        <button
+          type="button"
+          onClick={() => {
+            setCurrentPage('home');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{
+            background: currentPage === 'home' ? 'rgba(34, 211, 238, 0.1)' : 'transparent',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            textAlign: 'left',
+            fontSize: '15px',
+            fontWeight: '800',
+            color: currentPage === 'home' ? '#22d3ee' : '#f8fafc',
+            width: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}
+        >
+          <span>🏠 Home</span>
+        </button>
+
+        {/* TOUR DI PRODOTTO SUBPAGES LIST */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          <span style={{ fontSize: '10px', fontWeight: '800', color: '#64748b', letterSpacing: '1px', textTransform: 'uppercase', paddingLeft: '16px', marginBottom: '4px' }}>
+            {currentT.navFeatures}
+          </span>
+          {[
+            { id: 'diet', icon: Apple, labelIt: '🍏 Diet Architect', labelEn: '🍏 Diet Architect' },
+            { id: 'workout', icon: Dumbbell, labelIt: '🏋️ Workout Hub', labelEn: '🏋️ Workout Hub' },
+            { id: 'body', icon: Ruler, labelIt: '📊 Composizione Corporea', labelEn: '📊 Body Composition' },
+            { id: 'wellness', icon: Heart, labelIt: '🛌 Bio-Tracker & Sonno', labelEn: '🛌 Bio-Tracker & Sleep' },
+            { id: 'mindfulness', icon: Wind, labelIt: '🌬️ Spazio Mindfulness', labelEn: '🌬️ Mindfulness Space' }
+          ].map((sub) => {
+            const isCurrentSub = currentPage === sub.id;
+            return (
+              <button
+                key={sub.id}
+                type="button"
+                onClick={() => {
+                  setCurrentPage(sub.id as Page);
+                  setIsMobileMenuOpen(false);
+                }}
+                style={{
+                  background: isCurrentSub ? 'rgba(34, 211, 238, 0.1)' : 'transparent',
+                  border: 'none',
+                  borderRadius: '10px',
+                  padding: '10px 16px',
+                  textAlign: 'left',
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  color: isCurrentSub ? '#22d3ee' : '#f8fafc',
+                  width: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  paddingLeft: '24px'
+                }}
+              >
+                <sub.icon size={14} style={{ color: isCurrentSub ? '#22d3ee' : '#64748b' }} />
+                <span>{lang === 'it' ? sub.labelIt : sub.labelEn}</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+
+        {/* EXPLORE LINK */}
+        <button
+          type="button"
+          onClick={() => {
+            handleScrollTo('screenshots');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            textAlign: 'left',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#f8fafc',
+            width: '100%'
+          }}
+        >
+          🔍 {currentT.navScreenshots}
+        </button>
+
+        {/* PRICING LINK */}
+        <button
+          type="button"
+          onClick={() => {
+            handleScrollTo('pricing');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            textAlign: 'left',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#f8fafc',
+            width: '100%'
+          }}
+        >
+          💎 {currentT.navPricing}
+        </button>
+
+        {/* FAQ LINK */}
+        <button
+          type="button"
+          onClick={() => {
+            handleScrollTo('faq');
+            setIsMobileMenuOpen(false);
+          }}
+          style={{
+            background: 'transparent',
+            border: 'none',
+            borderRadius: '10px',
+            padding: '12px 16px',
+            textAlign: 'left',
+            fontSize: '15px',
+            fontWeight: '700',
+            color: '#f8fafc',
+            width: '100%'
+          }}
+        >
+          ❓ {currentT.navFaq}
+        </button>
+
+        {/* ACTION BUTTON MOBILE */}
+        <a
+          href="https://mydietplan-pro.vercel.app/"
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={() => setIsMobileMenuOpen(false)}
+          className="btn btn-primary glow-btn"
+          style={{
+            padding: '14px',
+            borderRadius: '12px',
+            fontSize: '13.5px',
+            fontWeight: '800',
+            background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+            color: '#020617',
+            boxShadow: '0 4px 15px rgba(34, 211, 238, 0.3)',
+            textAlign: 'center',
+            width: '100%',
+            display: 'block'
+          }}
+        >
+          🚀 {currentT.btnOpenApp}
+        </a>
+      </div>
+    )}
 
       {/* VIEWPORT CONTROLLER */}
       {currentPage === 'home' ? (
