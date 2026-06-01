@@ -19,7 +19,6 @@ import {
   HelpCircle,
   Lock,
   RefreshCw,
-  FileText,
   Menu,
   X
 } from 'lucide-react';
@@ -37,10 +36,90 @@ import type { TourStep } from './TourData';
 type Language = 'it' | 'en';
 type Page = 'home' | 'diet' | 'workout' | 'body' | 'wellness' | 'mindfulness';
 
+const FATTORI_LAF = {
+  sedentario: 1.2,
+  leggero: 1.375,
+  moderato: 1.55,
+  intenso: 1.725,
+  atleta: 1.9,
+};
+
+function calcolaBmrETdeeLocal(peso: number, altezza: number, eta: number, sesso: 'm' | 'f', livelloAttivita: keyof typeof FATTORI_LAF, goal: 'perdita_peso' | 'mantenimento' | 'ipertrofia') {
+  // Mifflin-St Jeor
+  const base = 10 * peso + 6.25 * altezza - 5 * eta;
+  const bmr = sesso === 'm' ? base + 5 : base - 161;
+  const tdee = bmr * FATTORI_LAF[livelloAttivita];
+
+  let kcalTarget = tdee;
+  let pctP = 20; // % Proteine
+  let pctC = 50; // % Carboidrati
+  let pctG = 30; // % Grassi
+
+  if (goal === 'perdita_peso') {
+    kcalTarget = tdee * 0.82;
+    pctP = 28;
+    pctC = 42;
+    pctG = 30;
+  } else if (goal === 'ipertrofia') {
+    kcalTarget = tdee * 1.10;
+    pctP = 24;
+    pctC = 51;
+    pctG = 25;
+  }
+
+  const finalKcal = Math.round(kcalTarget);
+  const proteineGrams = Math.round((finalKcal * (pctP / 100)) / 4);
+  const carboidratiGrams = Math.round((finalKcal * (pctC / 100)) / 4);
+  const grassiGrams = Math.round((finalKcal * (pctG / 100)) / 9);
+
+  return {
+    bmr: Math.round(bmr),
+    tdee: Math.round(tdee),
+    kcalTarget: finalKcal,
+    proteineGrams,
+    carboidratiGrams,
+    grassiGrams
+  };
+}
+
 export default function LandingPage() {
   const [lang, setLang] = useState<Language>('it');
   const [currentPage, setCurrentPage] = useState<Page>('home');
   const [deviceTab, setDeviceTab] = useState<'mobile' | 'desktop'>('desktop');
+
+  // Stati per il calcolatore interattivo BMR a 4 passi in Homepage
+  const [calcStep, setCalcStep] = useState(1);
+  const [calcNome, setCalcNome] = useState('');
+  const [calcSesso, setCalcSesso] = useState<'m' | 'f'>('m');
+  const [calcEta, setCalcEta] = useState<string>('28');
+  const [calcAltezza, setCalcAltezza] = useState<string>('175');
+  const [calcPeso, setCalcPeso] = useState<string>('70');
+  const [calcAttivita, setCalcAttivita] = useState<'sedentario' | 'leggero' | 'moderato' | 'intenso' | 'atleta'>('moderato');
+  const [calcGoal, setCalcGoal] = useState<'perdita_peso' | 'mantenimento' | 'ipertrofia'>('perdita_peso');
+
+  // Stati per i 4 Form di Prova (lead capture)
+  // Form 1: Hero Block
+  const [heroEmail, setHeroEmail] = useState('');
+  const [heroSuccess, setHeroSuccess] = useState(false);
+  const [heroLoading, setHeroLoading] = useState(false);
+
+  // Form 2: BMR Calculator Step 4 (Results)
+  const [calcEmail, setCalcEmail] = useState('');
+  const [calcSuccess, setCalcSuccess] = useState(false);
+  const [calcLoading, setCalcLoading] = useState(false);
+
+  // Form 3: Pricing Modal Activation
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [modalPlan, setModalPlan] = useState<'trial' | 'monthly' | 'yearly' | 'lifetime'>('trial');
+  const [modalEmail, setModalEmail] = useState('');
+  const [modalNome, setModalNome] = useState('');
+  const [modalSuccess, setModalSuccess] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false);
+
+  // Form 4: Pre-Footer CTA Form
+  const [footerEmail, setFooterEmail] = useState('');
+  const [footerSuccess, setFooterSuccess] = useState(false);
+  const [footerLoading, setFooterLoading] = useState(false);
   
   // Stati per i caroselli della Homepage
   const [activeDesktopIdx, setActiveDesktopIdx] = useState(0);
@@ -194,6 +273,11 @@ export default function LandingPage() {
       lifetimeNotice: 'Pagamento Unico - Accesso Illimitato',
       moneyBack: 'Garanzia Soddisfatti o Rimborsati',
       
+      planTrialName: 'Prova Gratuita',
+      planTrialDesc: 'Prova tutte le funzioni Premium senza inserire nessuna carta di credito.',
+      trialWarn: 'Dopo 7 giorni verrà richiesto il pagamento per continuare a usare l\'app.',
+      btnStartTrial: 'Inizia Prova Gratis',
+      
       featureUnlimitedProfiles: 'Profili utenti illimitati nello stesso dispositivo',
       featureFullDiagnostics: 'Calcolo scientifico di BMR, TDEE e Fabbisogno',
       featureCloudSync: 'Sincronizzazione Cloud sicura con Supabase',
@@ -268,6 +352,11 @@ export default function LandingPage() {
       trialNotice: 'Starts with 7 Days Free Trial',
       lifetimeNotice: 'One-time Payment - Lifetime Access',
       moneyBack: 'Money-back Guarantee',
+      
+      planTrialName: 'Free Trial',
+      planTrialDesc: 'Try all Premium features for free without entering a credit card.',
+      trialWarn: 'After 7 days, payment will be requested to continue using the app.',
+      btnStartTrial: 'Start Free Trial',
       
       featureUnlimitedProfiles: 'Unlimited user profiles on the same device',
       featureFullDiagnostics: 'Scientific BMR, TDEE, and Target calculations',
@@ -861,46 +950,152 @@ export default function LandingPage() {
                 {currentT.heroSub}
               </p>
 
-              <div className="animate-fade-up" style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'center', marginTop: '16px', width: '100%', maxWidth: '450px' }}>
-                <a 
-                  href="#pricing" 
-                  className="btn btn-primary glow-btn" 
+              {!heroSuccess ? (
+                <form 
+                  className="animate-fade-up animate-pulse-glow" 
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    if (!heroEmail) return;
+                    setHeroLoading(true);
+                    setTimeout(() => {
+                      setHeroLoading(false);
+                      setHeroSuccess(true);
+                    }, 1200);
+                  }}
                   style={{ 
-                    flex: 1, 
-                    padding: '14px 28px', 
-                    borderRadius: '14px', 
-                    fontSize: '14px', 
-                    fontWeight: '700',
-                    background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
-                    color: '#020617',
-                    boxShadow: '0 4px 20px rgba(34, 211, 238, 0.35)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px'
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    alignItems: 'center', 
+                    gap: '12px', 
+                    marginTop: '20px', 
+                    width: '100%', 
+                    maxWidth: '520px' 
                   }}
                 >
-                  <Zap size={14} fill="#020617" />
-                  <span>{currentT.btnStartFree}</span>
-                </a>
+                  <div style={{ 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '8px', 
+                    width: '100%', 
+                    background: 'rgba(15, 23, 42, 0.6)', 
+                    padding: '6px', 
+                    borderRadius: '16px', 
+                    border: '1px solid rgba(34, 211, 238, 0.25)', 
+                    boxShadow: '0 0 20px rgba(34, 211, 238, 0.05), inset 0 0 10px rgba(34, 211, 238, 0.03)' 
+                  }}>
+                    <input 
+                      type="email" 
+                      required 
+                      placeholder={lang === 'it' ? 'La tua migliore email...' : 'Your best email...'} 
+                      value={heroEmail}
+                      onChange={(e) => setHeroEmail(e.target.value)}
+                      style={{ 
+                        flex: '1 1 240px', 
+                        background: 'transparent', 
+                        border: 'none', 
+                        outline: 'none', 
+                        color: '#fff', 
+                        padding: '12px 16px', 
+                        fontSize: '14px',
+                        fontFamily: 'inherit'
+                      }} 
+                    />
+                    <button 
+                      type="submit" 
+                      disabled={heroLoading}
+                      className="btn glow-btn" 
+                      style={{ 
+                        padding: '12px 24px', 
+                        borderRadius: '12px', 
+                        fontSize: '13px', 
+                        fontWeight: '800', 
+                        background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)', 
+                        color: '#020617', 
+                        border: 'none', 
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        flex: '1 0 auto',
+                        minWidth: '160px'
+                      }}
+                    >
+                      {heroLoading ? (
+                        <RefreshCw size={14} className="animate-spin" />
+                      ) : (
+                        <>
+                          <Zap size={14} fill="#020617" />
+                          <span>{lang === 'it' ? 'Inizia Prova 7 Giorni' : 'Start 7-Day Trial'}</span>
+                        </>
+                      )}
+                    </button>
+                  </div>
+                  <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '700', textShadow: '0 0 6px rgba(34, 211, 238, 0.3)', textAlign: 'center' }}>
+                    ⚠️ {lang === 'it' 
+                      ? 'Dopo 7 giorni verrà richiesto il pagamento per continuare a usare l\'app.' 
+                      : 'After 7 days, payment will be requested to continue using the app.'}
+                  </span>
+                </form>
+              ) : (
+                <div 
+                  className="glass animate-fade-up" 
+                  style={{ 
+                    padding: '24px 30px', 
+                    borderRadius: '16px', 
+                    borderColor: 'var(--accent-teal)', 
+                    background: 'rgba(20, 184, 166, 0.05)', 
+                    boxShadow: '0 0 25px rgba(20, 184, 166, 0.15)',
+                    marginTop: '20px',
+                    maxWidth: '520px',
+                    width: '100%',
+                    textAlign: 'center'
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--accent-teal)', marginBottom: '8px' }}>
+                    <ShieldCheck size={20} />
+                    <span style={{ fontWeight: '800', fontSize: '15px' }}>
+                      {lang === 'it' ? 'PROVA GRATUITA ATTIVATA!' : 'FREE TRIAL ACTIVATED!'}
+                    </span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: 0 }}>
+                    {lang === 'it' 
+                      ? `Grazie! Abbiamo inviato le istruzioni di accesso a ${heroEmail}.`
+                      : `Thank you! We've sent access instructions to ${heroEmail}.`}
+                  </p>
+                </div>
+              )}
+
+              {/* Tasti di navigazione rapida per scoprire di più */}
+              <div className="animate-fade-up" style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '10px' }}>
                 <a 
                   href="#features" 
-                  className="btn btn-secondary" 
                   style={{ 
-                    flex: 1, 
-                    padding: '14px 28px', 
-                    borderRadius: '14px', 
-                    fontSize: '14px', 
+                    fontSize: '13px', 
                     fontWeight: '700',
-                    background: 'rgba(255, 255, 255, 0.03)',
-                    border: '1px solid var(--border-color)',
-                    color: 'var(--text-primary)',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center'
+                    color: 'var(--text-secondary)',
+                    textDecoration: 'underline',
+                    transition: 'color 0.2s'
                   }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
                 >
                   {currentT.btnLearnMore}
+                </a>
+                <span style={{ color: 'var(--text-muted)' }}>|</span>
+                <a 
+                  href="#pricing" 
+                  style={{ 
+                    fontSize: '13px', 
+                    fontWeight: '700',
+                    color: 'var(--text-secondary)',
+                    textDecoration: 'underline',
+                    transition: 'color 0.2s'
+                  }}
+                  onMouseEnter={(e) => e.currentTarget.style.color = '#22d3ee'}
+                  onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-secondary)'}
+                >
+                  {lang === 'it' ? 'Vedi le tariffe' : 'View plans & rates'}
                 </a>
               </div>
 
@@ -1110,6 +1305,479 @@ export default function LandingPage() {
             </div>
           </section>
 
+          {/* TRIAL CALCULATOR WIDGET (L'ALGORITMO DI PROVA) */}
+          <section id="trial-calculator" style={{ padding: '80px 24px', background: 'rgba(255, 255, 255, 0.002)', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
+            <div className="container" style={{ maxWidth: '750px' }}>
+              <div style={{ textAlign: 'center', marginBottom: '40px' }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'var(--cyan-glow)',
+                  border: '1px solid rgba(34, 211, 238, 0.25)',
+                  color: 'var(--accent-cyan)',
+                  padding: '4px 12px',
+                  borderRadius: '20px',
+                  fontSize: '10px',
+                  fontWeight: '800',
+                  letterSpacing: '1px',
+                  marginBottom: '12px'
+                }}>
+                  <Sparkles size={11} className="animate-pulse" />
+                  <span>TEST ALGORITMO INTEGRATO</span>
+                </div>
+                <h2 style={{ fontSize: '32px', fontWeight: '800', fontFamily: 'var(--font-title)' }}>
+                  {lang === 'it' ? "Prova l'Algoritmo di MyDietPlan Pro" : "Try MyDietPlan Pro's Algorithm"}
+                </h2>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '14px', maxWidth: '550px', margin: '8px auto 0 auto' }}>
+                  {lang === 'it' 
+                    ? 'Calcola all\'istante il tuo metabolismo basale (BMR), fabbisogno giornaliero (TDEE) e i macronutrienti ideali in base ai tuoi obiettivi biologici.'
+                    : 'Instantly calculate your basal metabolic rate (BMR), daily energy expenditure (TDEE), and perfect macronutrient targets based on your biological goals.'}
+                </p>
+              </div>
+
+              <div className="glass" style={{ padding: '35px', borderRadius: '24px', position: 'relative', overflow: 'hidden' }}>
+                
+                {/* Step indicators */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+                  {[1, 2, 3, 4].map((s) => (
+                    <div
+                      key={s}
+                      style={{
+                        width: '23%',
+                        height: '5px',
+                        background: s <= calcStep ? 'var(--accent-cyan)' : 'rgba(255,255,255,0.08)',
+                        boxShadow: s <= calcStep ? '0 0 10px rgba(34, 211, 238, 0.5)' : 'none',
+                        borderRadius: '3px',
+                        transition: 'all 0.3s ease',
+                      }}
+                    />
+                  ))}
+                </div>
+
+                {/* STEP 1: DATI FISICI */}
+                {calcStep === 1 && (
+                  <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textAlign: 'center', color: '#fff' }}>
+                      {lang === 'it' ? 'Passo 1: Le tue caratteristiche fisiche' : 'Step 1: Your physical profile'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                        {lang === 'it' ? 'Il tuo nome' : 'Your name'}
+                      </label>
+                      <input 
+                        type="text" 
+                        value={calcNome} 
+                        onChange={(e) => setCalcNome(e.target.value)} 
+                        placeholder={lang === 'it' ? 'es. Daniele' : 'e.g. Daniele'}
+                        style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px' }} 
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                        {lang === 'it' ? 'Sesso biologico' : 'Biological gender'}
+                      </label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <button
+                          type="button"
+                          onClick={() => setCalcSesso('m')}
+                          style={{
+                            background: calcSesso === 'm' ? 'rgba(34, 211, 238, 0.1)' : 'rgba(255,255,255,0.02)',
+                            border: calcSesso === 'm' ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                            borderRadius: '12px', padding: '12px', color: calcSesso === 'm' ? '#22d3ee' : 'var(--text-secondary)',
+                            fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px'
+                          }}
+                        >
+                          🙋‍♂️ {lang === 'it' ? 'Umono' : 'Male'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setCalcSesso('f')}
+                          style={{
+                            background: calcSesso === 'f' ? 'rgba(34, 211, 238, 0.1)' : 'rgba(255,255,255,0.02)',
+                            border: calcSesso === 'f' ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                            borderRadius: '12px', padding: '12px', color: calcSesso === 'f' ? '#22d3ee' : 'var(--text-secondary)',
+                            fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px'
+                          }}
+                        >
+                          🙋‍♀️ {lang === 'it' ? 'Donna' : 'Female'}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '12px' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {lang === 'it' ? 'Età' : 'Age'}
+                        </label>
+                        <input 
+                          type="number" 
+                          value={calcEta} 
+                          onChange={(e) => setCalcEta(e.target.value)} 
+                          placeholder="es. 28" 
+                          style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {lang === 'it' ? 'Altezza (cm)' : 'Height (cm)'}
+                        </label>
+                        <input 
+                          type="number" 
+                          value={calcAltezza} 
+                          onChange={(e) => setCalcAltezza(e.target.value)} 
+                          placeholder="es. 175" 
+                          style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px' }} 
+                        />
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <label style={{ fontSize: '12px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                          {lang === 'it' ? 'Peso (kg)' : 'Weight (kg)'}
+                        </label>
+                        <input 
+                          type="number" 
+                          value={calcPeso} 
+                          onChange={(e) => setCalcPeso(e.target.value)} 
+                          placeholder="es. 70" 
+                          style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '14px' }} 
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setCalcStep(2)}
+                      disabled={!calcNome.trim() || !calcEta || !calcAltezza || !calcPeso}
+                      className="btn btn-primary"
+                      style={{
+                        padding: '12px', borderRadius: '12px', fontWeight: '800', fontSize: '14px', marginTop: '10px',
+                        background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+                        color: '#020617', border: 'none', cursor: 'pointer', transition: 'all 0.2s', opacity: (!calcNome.trim() || !calcEta || !calcAltezza || !calcPeso) ? 0.5 : 1
+                      }}
+                    >
+                      {lang === 'it' ? 'Avanti' : 'Next'}
+                    </button>
+                  </div>
+                )}
+
+                {/* STEP 2: LIVELLO DI ATTIVITA */}
+                {calcStep === 2 && (
+                  <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textAlign: 'center', color: '#fff', marginBottom: '8px' }}>
+                      {lang === 'it' ? 'Passo 2: Livello di attività fisica' : 'Step 2: Physical activity level'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      {[
+                        { id: 'sedentario', labelIt: 'Sedentario 🛋️', labelEn: 'Sedentary 🛋️', descIt: 'Lavoro d\'ufficio, pochissimo movimento.', descEn: 'Office job, very little movement.' },
+                        { id: 'leggero', labelIt: 'Leggero 🚶‍♂️', labelEn: 'Lightly Active 🚶‍♂️', descIt: 'Attività leggera o passeggiate 1-3 volte a settimana.', descEn: 'Light exercise or walks 1-3 times a week.' },
+                        { id: 'moderato', labelIt: 'Moderato 💪', labelEn: 'Moderately Active 💪', descIt: 'Allenamento a media intensità 3-5 volte a settimana.', descEn: 'Moderate training 3-5 times a week.' },
+                        { id: 'intenso', labelIt: 'Intenso ⚡', labelEn: 'Very Active ⚡', descIt: 'Attività pesante e sport 6-7 volte a settimana.', descEn: 'Heavy exercise and sports 6-7 times a week.' },
+                        { id: 'atleta', labelIt: 'Atleta 🏆', labelEn: 'Athlete 🏆', descIt: 'Allenamenti bisettimanali ad altissima intensità.', descEn: 'Very heavy twice-a-day workouts.' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setCalcAttivita(item.id as any)}
+                          style={{
+                            background: calcAttivita === item.id ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255,255,255,0.02)',
+                            border: calcAttivita === item.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                            borderRadius: '14px', padding: '14px 20px', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                            alignItems: 'flex-start', gap: '4px', width: '100%', transition: 'all 0.2s', textAlign: 'left'
+                          }}
+                        >
+                          <span style={{ fontSize: '14px', fontWeight: '800', color: calcAttivita === item.id ? '#22d3ee' : '#fff' }}>
+                            {lang === 'it' ? item.labelIt : item.labelEn}
+                          </span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            {lang === 'it' ? item.descIt : item.descEn}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setCalcStep(1)}
+                        style={{
+                          flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)',
+                          background: 'transparent', color: '#fff', cursor: 'pointer', fontWeight: '700'
+                        }}
+                      >
+                        {lang === 'it' ? 'Indietro' : 'Back'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCalcStep(3)}
+                        style={{
+                          flex: 1, padding: '12px', borderRadius: '12px', border: 'none',
+                          background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+                          color: '#020617', cursor: 'pointer', fontWeight: '800'
+                        }}
+                      >
+                        {lang === 'it' ? 'Avanti' : 'Next'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 3: OBIETTIVO BIOLOGICO */}
+                {calcStep === 3 && (
+                  <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', textAlign: 'center', color: '#fff', marginBottom: '8px' }}>
+                      {lang === 'it' ? 'Passo 3: Seleziona il tuo obiettivo' : 'Step 3: Choose your goal'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      {[
+                        { id: 'perdita_peso', titleIt: 'Deficit Calorico 🔥', titleEn: 'Caloric Deficit 🔥', descIt: 'Dimagrimento sano, definizione muscolare.', descEn: 'Healthy weight loss, muscle definition.' },
+                        { id: 'mantenimento', titleIt: 'Mantenimento Biologico ⚖️', titleEn: 'Biological Maintenance ⚖️', descIt: 'Mantenimento del peso, miglioramento della vitalità.', descEn: 'Maintain weight, improve vitality.' },
+                        { id: 'ipertrofia', titleIt: 'Surplus Calorico 🧱', titleEn: 'Caloric Surplus 🧱', descIt: 'Crescita e ricostruzione muscolare.', descEn: 'Muscle growth and body rebuilding.' }
+                      ].map((item) => (
+                        <button
+                          key={item.id}
+                          type="button"
+                          onClick={() => setCalcGoal(item.id as any)}
+                          style={{
+                            background: calcGoal === item.id ? 'rgba(34, 211, 238, 0.08)' : 'rgba(255,255,255,0.02)',
+                            border: calcGoal === item.id ? '1px solid var(--accent-cyan)' : '1px solid var(--border-color)',
+                            borderRadius: '14px', padding: '16px 20px', cursor: 'pointer', display: 'flex', flexDirection: 'column',
+                            alignItems: 'flex-start', gap: '4px', width: '100%', transition: 'all 0.2s', textAlign: 'left'
+                          }}
+                        >
+                          <span style={{ fontSize: '14px', fontWeight: '800', color: calcGoal === item.id ? '#22d3ee' : '#fff' }}>
+                            {lang === 'it' ? item.titleIt : item.titleEn}
+                          </span>
+                          <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                            {lang === 'it' ? item.descIt : item.descEn}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setCalcStep(2)}
+                        style={{
+                          flex: 1, padding: '12px', borderRadius: '12px', border: '1px solid var(--border-color)',
+                          background: 'transparent', color: '#fff', cursor: 'pointer', fontWeight: '700'
+                        }}
+                      >
+                        {lang === 'it' ? 'Indietro' : 'Back'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setCalcStep(4)}
+                        style={{
+                          flex: 1, padding: '12px', borderRadius: '12px', border: 'none',
+                          background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+                          color: '#020617', cursor: 'pointer', fontWeight: '800'
+                        }}
+                      >
+                        {lang === 'it' ? 'Calcola Target' : 'Calculate'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* STEP 4: RISULTATI NEON & FORM 2 */}
+                {calcStep === 4 && (
+                  <div className="animate-fade-up" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    {(() => {
+                      const res = calcolaBmrETdeeLocal(
+                        parseFloat(calcPeso) || 70,
+                        parseFloat(calcAltezza) || 175,
+                        parseFloat(calcEta) || 28,
+                        calcSesso,
+                        calcAttivita,
+                        calcGoal
+                      );
+                      
+                      const totalMacrosKcal = (res.carboidratiGrams * 4) + (res.proteineGrams * 4) + (res.grassiGrams * 9);
+                      const carbPct = Math.round(((res.carboidratiGrams * 4) / totalMacrosKcal) * 100);
+                      const protPct = Math.round(((res.proteineGrams * 4) / totalMacrosKcal) * 100);
+                      const fatPct = 100 - carbPct - protPct;
+
+                      return (
+                        <>
+                          <h3 style={{ fontSize: '18px', fontWeight: '900', textAlign: 'center', color: '#fff', marginBottom: '4px' }}>
+                            🎉 {lang === 'it' ? `I tuoi target proposti, ${calcNome}!` : `Your proposed targets, ${calcNome}!`}
+                          </h3>
+
+                          {/* BMR and TDEE row */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div className="glass" style={{ padding: '12px', textAlign: 'center', borderRadius: '12px' }}>
+                              <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                BMR (Metabolismo Basale)
+                              </span>
+                              <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+                                {res.bmr} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>kcal</span>
+                              </div>
+                            </div>
+                            <div className="glass" style={{ padding: '12px', textAlign: 'center', borderRadius: '12px' }}>
+                              <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                TDEE (Consumo Totale)
+                              </span>
+                              <div style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-primary)', marginTop: '2px' }}>
+                                {res.tdee} <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>kcal</span>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Calorie Card */}
+                          <div className="glass" style={{ 
+                            padding: '24px 20px', 
+                            textAlign: 'center', 
+                            borderRadius: '16px', 
+                            border: '1px solid rgba(34, 211, 238, 0.4)',
+                            background: 'rgba(34, 211, 238, 0.03)',
+                            boxShadow: 'inset 0 0 15px rgba(34, 211, 238, 0.05)'
+                          }}>
+                            <span style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                              ⚡ {lang === 'it' ? 'FABBISOGNO GIORNALIERO PROPOSTO' : 'DAILY PROPOSED CALORIC BUDGET'}
+                            </span>
+                            <div style={{ fontSize: '36px', fontWeight: '900', color: '#fff', fontFamily: 'var(--font-title)', margin: '6px 0', textShadow: '0 0 15px rgba(34, 211, 238, 0.3)' }}>
+                              {res.kcalTarget} <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--accent-cyan)' }}>kcal/giorno</span>
+                            </div>
+                            <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>
+                              {calcGoal === 'perdita_peso' && (lang === 'it' ? 'Deficit calorico calcolato per un dimagrimento duraturo' : 'Calculated calorie deficit for long-term fat loss')}
+                              {calcGoal === 'mantenimento' && (lang === 'it' ? 'Calorie calcolate per mantenere il peso' : 'Calories calculated to maintain body weight')}
+                              {calcGoal === 'ipertrofia' && (lang === 'it' ? 'Surplus calorico impostato per favorire la massa magra' : 'Calorie surplus set to favor lean muscle gain')}
+                            </span>
+                          </div>
+
+                          {/* Macronutrients Cards */}
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--accent-cyan)', fontWeight: '800' }}>🍞 CARBOIDRATI</span>
+                              <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '2px' }}>{res.carboidratiGrams}g</div>
+                              <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{carbPct}% ({res.carboidratiGrams * 4} kcal)</span>
+                            </div>
+                            <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--accent-teal)', fontWeight: '800' }}>🍗 PROTEINE</span>
+                              <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '2px' }}>{res.proteineGrams}g</div>
+                              <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{protPct}% ({res.proteineGrams * 4} kcal)</span>
+                            </div>
+                            <div style={{ flex: 1, background: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-color)', padding: '10px', borderRadius: '12px', textAlign: 'center' }}>
+                              <span style={{ fontSize: '10px', color: 'var(--accent-rose)', fontWeight: '800' }}>🥑 GRASSI</span>
+                              <div style={{ fontSize: '18px', fontWeight: '800', color: '#fff', marginTop: '2px' }}>{res.grassiGrams}g</div>
+                              <span style={{ fontSize: '9px', color: 'var(--text-muted)' }}>{fatPct}% ({res.grassiGrams * 9} kcal)</span>
+                            </div>
+                          </div>
+
+                          {/* Colorful macro proportion bar */}
+                          <div style={{ width: '100%', height: '8px', borderRadius: '4px', overflow: 'hidden', display: 'flex', marginTop: '-8px' }}>
+                            <div style={{ width: `${carbPct}%`, background: 'var(--accent-cyan)' }} />
+                            <div style={{ width: `${protPct}%`, background: 'var(--accent-teal)' }} />
+                            <div style={{ width: `${fatPct}%`, background: 'var(--accent-rose)' }} />
+                          </div>
+
+                          <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '10px 0' }} />
+
+                          {/* FORM 2: Trial Calculator Signup Form */}
+                          {!calcSuccess ? (
+                            <form 
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                if (!calcEmail) return;
+                                setCalcLoading(true);
+                                setTimeout(() => {
+                                  setCalcLoading(false);
+                                  setCalcSuccess(true);
+                                }, 1200);
+                              }}
+                              style={{ display: 'flex', flexDirection: 'column', gap: '10px', background: 'rgba(255,255,255,0.01)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}
+                            >
+                              <h4 style={{ fontSize: '13px', fontWeight: '800', color: '#fff', textAlign: 'center' }}>
+                                💾 {lang === 'it' ? 'Salva i tuoi Target & Attiva Prova Premium' : 'Save your Targets & Activate Premium Trial'}
+                              </h4>
+                              <p style={{ fontSize: '11px', color: 'var(--text-secondary)', textAlign: 'center', margin: 0 }}>
+                                {lang === 'it' 
+                                  ? 'Invia questi target alla tua email e attiva subito la prova gratuita di 7 giorni per sbloccare l\'app.'
+                                  : 'Send these targets to your email and start your 7-day free trial immediately to unlock the app.'}
+                              </p>
+                              
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px' }}>
+                                <input 
+                                  type="email" 
+                                  required 
+                                  value={calcEmail}
+                                  onChange={(e) => setCalcEmail(e.target.value)}
+                                  placeholder={lang === 'it' ? 'Inserisci la tua email...' : 'Enter your email...'}
+                                  style={{ flex: '1 1 200px', background: 'rgba(0,0,0,0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '13px', fontFamily: 'inherit' }}
+                                />
+                                <button 
+                                  type="submit" 
+                                  disabled={calcLoading}
+                                  className="btn glow-btn"
+                                  style={{
+                                    flex: '1 0 auto', padding: '12px 20px', borderRadius: '10px', fontWeight: '800', fontSize: '12.5px',
+                                    background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+                                    color: '#020617', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px'
+                                  }}
+                                >
+                                  {calcLoading ? <RefreshCw size={13} className="animate-spin" /> : <span>{lang === 'it' ? 'Ricevi Target & Prova Gratis' : 'Get Targets & Start Trial'}</span>}
+                                </button>
+                              </div>
+                              <span style={{ fontSize: '11.5px', color: 'var(--accent-cyan)', fontWeight: '700', textShadow: '0 0 6px rgba(34, 211, 238, 0.3)', textAlign: 'center', marginTop: '4px' }}>
+                                ⚠️ {lang === 'it' 
+                                  ? 'Dopo 7 giorni verrà richiesto il pagamento per continuare a usare l\'app. Nessuna carta richiesta.' 
+                                  : 'After 7 days, payment will be requested to continue using the app. No card required.'}
+                              </span>
+                            </form>
+                          ) : (
+                            <div 
+                              className="glass" 
+                              style={{ 
+                                padding: '20px', 
+                                borderRadius: '14px', 
+                                borderColor: 'var(--accent-teal)', 
+                                background: 'rgba(20, 184, 166, 0.05)',
+                                textAlign: 'center',
+                                animation: 'fadeInUp 0.3s ease'
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--accent-teal)', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>
+                                <ShieldCheck size={16} />
+                                <span>{lang === 'it' ? 'PROVA ATTIVATA CON SUCCESSO!' : 'TRIAL ACTIVATED SUCCESSFULLY!'}</span>
+                              </div>
+                              <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
+                                {lang === 'it'
+                                  ? `I tuoi target ed il link per scaricare l'app sono stati inviati a ${calcEmail}. Controlla la posta!`
+                                  : `Your targets and app download link have been sent to ${calcEmail}. Check your inbox!`}
+                              </p>
+                            </div>
+                          )}
+
+                          <div style={{ display: 'flex', justifyContent: 'center', gap: '10px', marginTop: '6px' }}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setCalcStep(1);
+                                setCalcSuccess(false);
+                              }}
+                              style={{
+                                padding: '8px 16px', borderRadius: '8px', border: '1px solid var(--border-color)',
+                                background: 'transparent', color: 'var(--text-secondary)', cursor: 'pointer', fontWeight: '700', fontSize: '11px'
+                              }}
+                            >
+                              🔄 {lang === 'it' ? 'Ripeti Calcolo' : 'Recalculate'}
+                            </button>
+                          </div>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+
+              </div>
+            </div>
+          </section>
+
           {/* SCREENSHOTS SELECTOR */}
           <section id="screenshots" style={{ padding: '80px 24px', background: 'rgba(255, 255, 255, 0.005)', borderTop: '1px solid rgba(255,255,255,0.015)' }}>
             <div className="container">
@@ -1292,26 +1960,72 @@ export default function LandingPage() {
                 </p>
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '30px', alignItems: 'stretch', maxWidth: '1000px', margin: '0 auto' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(230px, 1fr))', gap: '20px', alignItems: 'stretch', maxWidth: '1200px', margin: '0 auto' }}>
                 
-                {/* Piano Mensile */}
-                <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                {/* Piano Prova Gratis (7 Giorni) */}
+                <div className="glass pricing-card" style={{ padding: '30px 24px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '20px', border: '1px solid rgba(34, 211, 238, 0.2)' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-cyan)', letterSpacing: '0.5px' }}>
+                      {currentT.planTrialName}
+                    </h3>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', minHeight: '36px', lineHeight: '1.4' }}>
+                      {currentT.planTrialDesc}
+                    </p>
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>0.00€</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ 7 {lang === 'it' ? 'giorni' : 'days'}</span>
+                  </div>
+                  <div style={{ fontSize: '10.5px', color: 'var(--accent-cyan)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
+                    ⚠️ {currentT.trialWarn}
+                  </div>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', fontSize: '12px', flex: 1 }}>
+                    {[
+                      currentT.featureUnlimitedProfiles,
+                      currentT.featureFullDiagnostics,
+                      currentT.featureAllAccess,
+                      currentT.featureNoAds
+                    ].map((f, i) => (
+                      <li key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <Check size={13} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
+                        <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModalPlan('trial');
+                      setIsModalOpen(true);
+                      setModalSuccess(false);
+                      setModalEmail('');
+                      setModalNome('');
+                    }}
+                    className="btn btn-secondary glow-btn" 
+                    style={{ borderRadius: '10px', padding: '12px', fontWeight: '800', background: 'rgba(34, 211, 238, 0.05)', borderColor: 'rgba(34, 211, 238, 0.3)', color: 'var(--accent-cyan)', textAlign: 'center', fontSize: '12px', cursor: 'pointer' }}
+                  >
+                    {currentT.btnStartTrial}
+                  </button>
+                </div>
+
+                {/* Piano Mensile */}
+                <div className="glass pricing-card" style={{ padding: '30px 24px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '20px' }}>
+                  <div>
+                    <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-secondary)', letterSpacing: '0.5px' }}>
                       {currentT.planMonthlyName}
                     </h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', minHeight: '36px', lineHeight: '1.4' }}>
                       {currentT.planMonthlyDesc}
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>9.99€</span>
-                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'mese' : 'month'}</span>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>9.99€</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'mese' : 'month'}</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--accent-teal)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                  <div style={{ fontSize: '10.5px', color: 'var(--accent-teal)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
                     {currentT.trialNotice}
                   </div>
-                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', fontSize: '12px', flex: 1 }}>
                     {[
                       currentT.featureUnlimitedProfiles,
                       currentT.featureFullDiagnostics,
@@ -1319,35 +2033,46 @@ export default function LandingPage() {
                       currentT.featureCloudSync,
                       currentT.featureNoAds
                     ].map((f, i) => (
-                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Check size={14} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
+                      <li key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <Check size={13} style={{ color: 'var(--accent-cyan)', flexShrink: 0 }} />
                         <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
                       </li>
                     ))}
                   </ul>
-                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModalPlan('monthly');
+                      setIsModalOpen(true);
+                      setModalSuccess(false);
+                      setModalEmail('');
+                      setModalNome('');
+                    }}
+                    className="btn btn-secondary" 
+                    style={{ borderRadius: '10px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center', fontSize: '12px', cursor: 'pointer' }}
+                  >
                     {currentT.checkoutBtn}
-                  </a>
+                  </button>
                 </div>
 
                 {/* Piano Annuale (BEST VALUE) */}
-                <div className="glass pricing-card popular" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                <div className="glass pricing-card popular" style={{ padding: '30px 24px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '20px' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-teal)' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-teal)', letterSpacing: '0.5px' }}>
                       {currentT.planYearlyName}
                     </h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', minHeight: '36px', lineHeight: '1.4' }}>
                       {currentT.planYearlyDesc}
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>59.99€</span>
-                    <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'anno' : 'year'}</span>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>59.99€</span>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'anno' : 'year'}</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                  <div style={{ fontSize: '10.5px', color: 'var(--accent-cyan)', fontWeight: '800', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
                     {currentT.trialNotice} (Risparmi 50%)
                   </div>
-                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', fontSize: '12px', flex: 1 }}>
                     {[
                       currentT.featureUnlimitedProfiles,
                       currentT.featureFullDiagnostics,
@@ -1356,35 +2081,46 @@ export default function LandingPage() {
                       currentT.featureExportDoc,
                       currentT.featureNoAds
                     ].map((f, i) => (
-                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Check size={14} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
+                      <li key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <Check size={13} style={{ color: 'var(--accent-teal)', flexShrink: 0 }} />
                         <span style={{ color: 'var(--text-primary)' }}>{f}</span>
                       </li>
                     ))}
                   </ul>
-                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-primary glow-btn" style={{ borderRadius: '12px', padding: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))', color: '#020617', boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)', textAlign: 'center' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModalPlan('yearly');
+                      setIsModalOpen(true);
+                      setModalSuccess(false);
+                      setModalEmail('');
+                      setModalNome('');
+                    }}
+                    className="btn btn-primary glow-btn" 
+                    style={{ borderRadius: '10px', padding: '12px', fontWeight: '800', background: 'linear-gradient(135deg, var(--accent-teal), var(--accent-cyan))', color: '#020617', boxShadow: '0 4px 15px rgba(20, 184, 166, 0.3)', textAlign: 'center', fontSize: '12px', cursor: 'pointer', border: 'none' }}
+                  >
                     {currentT.checkoutBtn}
-                  </a>
+                  </button>
                 </div>
 
                 {/* Piano Lifetime */}
-                <div className="glass pricing-card" style={{ padding: '40px 30px', display: 'flex', flexDirection: 'column', gap: '20px', borderRadius: '20px' }}>
+                <div className="glass pricing-card" style={{ padding: '30px 24px', display: 'flex', flexDirection: 'column', gap: '16px', borderRadius: '20px' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-gold)' }}>
+                    <h3 style={{ fontSize: '15px', fontWeight: '800', textTransform: 'uppercase', color: 'var(--accent-gold)', letterSpacing: '0.5px' }}>
                       {currentT.planLifetimeName}
                     </h3>
-                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', minHeight: '36px' }}>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', minHeight: '36px', lineHeight: '1.4' }}>
                       {currentT.planLifetimeDesc}
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>359.99€</span>
+                    <span style={{ fontSize: '32px', fontWeight: '900', color: 'var(--text-primary)' }}>359.99€</span>
                     <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'una tantum' : 'one-time'}</span>
                   </div>
-                  <div style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
+                  <div style={{ fontSize: '10.5px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '12px', minHeight: '44px', display: 'flex', alignItems: 'center' }}>
                     {currentT.lifetimeNotice}
                   </div>
-                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '12px', listStyle: 'none', fontSize: '13px', flex: 1 }}>
+                  <ul style={{ display: 'flex', flexDirection: 'column', gap: '10px', listStyle: 'none', fontSize: '12px', flex: 1 }}>
                     {[
                       currentT.featureUnlimitedProfiles,
                       currentT.featureFullDiagnostics,
@@ -1393,15 +2129,26 @@ export default function LandingPage() {
                       currentT.featureExportDoc,
                       currentT.featureNoAds
                     ].map((f, i) => (
-                      <li key={i} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <Check size={14} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
+                      <li key={i} style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <Check size={13} style={{ color: 'var(--accent-gold)', flexShrink: 0 }} />
                         <span style={{ color: 'var(--text-secondary)' }}>{f}</span>
                       </li>
                     ))}
                   </ul>
-                  <a href="https://mydietplan-pro.vercel.app/" target="_blank" rel="noopener noreferrer" className="btn btn-secondary" style={{ borderRadius: '12px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center' }}>
+                  <button 
+                    type="button" 
+                    onClick={() => {
+                      setModalPlan('lifetime');
+                      setIsModalOpen(true);
+                      setModalSuccess(false);
+                      setModalEmail('');
+                      setModalNome('');
+                    }}
+                    className="btn btn-secondary" 
+                    style={{ borderRadius: '10px', padding: '12px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.02)', borderColor: 'var(--border-color)', textAlign: 'center', fontSize: '12px', cursor: 'pointer' }}
+                  >
                     {currentT.checkoutBtn}
-                  </a>
+                  </button>
                 </div>
 
               </div>
@@ -1483,6 +2230,156 @@ export default function LandingPage() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </section>
+
+          {/* PRE-FOOTER CTA SECTION (FORM 4) */}
+          <section id="footer-cta" style={{ padding: '60px 24px 80px 24px', position: 'relative' }}>
+            <div className="container" style={{ maxWidth: '900px' }}>
+              <div className="glass" style={{ 
+                padding: '50px 40px', 
+                borderRadius: '24px', 
+                textAlign: 'center', 
+                background: 'linear-gradient(180deg, rgba(8, 47, 73, 0.2) 0%, rgba(9, 13, 22, 0.6) 100%)', 
+                border: '1px solid rgba(34, 211, 238, 0.25)', 
+                boxShadow: '0 15px 40px rgba(0, 0, 0, 0.5), 0 0 25px rgba(34, 211, 238, 0.05)',
+                position: 'relative', 
+                overflow: 'hidden' 
+              }}>
+                <div style={{
+                  position: 'absolute',
+                  top: '0',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  width: '250px',
+                  height: '2px',
+                  background: 'linear-gradient(90deg, transparent, var(--accent-cyan), transparent)',
+                  pointerEvents: 'none'
+                }} />
+
+                <h3 style={{ fontSize: '26px', fontWeight: '900', fontFamily: 'var(--font-title)', color: '#fff', marginBottom: '12px' }}>
+                  {lang === 'it' ? 'Inizia a Progettare il tuo Corpo Oggi' : 'Start Designing Your Body Today'}
+                </h3>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13.5px', maxWidth: '550px', margin: '0 auto 24px auto', lineHeight: '1.6' }}>
+                  {lang === 'it' 
+                    ? 'Attiva la tua prova gratuita di 7 giorni e sblocca la suite scientifica locale di MyDietPlan Pro. Nessuna carta di credito richiesta.'
+                    : 'Activate your 7-day free trial and unlock MyDietPlan Pro\'s local scientific suite. No credit card required.'}
+                </p>
+
+                {!footerSuccess ? (
+                  <form 
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (!footerEmail) return;
+                      setFooterLoading(true);
+                      setTimeout(() => {
+                        setFooterLoading(false);
+                        setFooterSuccess(true);
+                      }, 1200);
+                    }}
+                    style={{ 
+                      display: 'flex', 
+                      flexDirection: 'column', 
+                      alignItems: 'center', 
+                      gap: '12px', 
+                      width: '100%', 
+                      maxWidth: '520px',
+                      margin: '0 auto'
+                    }}
+                  >
+                    <div style={{ 
+                      display: 'flex', 
+                      flexWrap: 'wrap', 
+                      gap: '8px', 
+                      width: '100%', 
+                      background: 'rgba(15, 23, 42, 0.6)', 
+                      padding: '6px', 
+                      borderRadius: '16px', 
+                      border: '1px solid rgba(255, 255, 255, 0.08)', 
+                      boxShadow: 'inset 0 0 10px rgba(0, 0, 0, 0.5)' 
+                    }}>
+                      <input 
+                        type="email" 
+                        required 
+                        placeholder={lang === 'it' ? 'Inserisci la tua email...' : 'Enter your email...'} 
+                        value={footerEmail}
+                        onChange={(e) => setFooterEmail(e.target.value)}
+                        style={{ 
+                          flex: '1 1 240px', 
+                          background: 'transparent', 
+                          border: 'none', 
+                          outline: 'none', 
+                          color: '#fff', 
+                          padding: '12px 16px', 
+                          fontSize: '14px',
+                          fontFamily: 'inherit'
+                        }} 
+                      />
+                      <button 
+                        type="submit" 
+                        disabled={footerLoading}
+                        className="btn glow-btn" 
+                        style={{ 
+                          padding: '12px 24px', 
+                          borderRadius: '12px', 
+                          fontSize: '13px', 
+                          fontWeight: '800', 
+                          background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)', 
+                          color: '#020617', 
+                          border: 'none', 
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          flex: '1 0 auto',
+                          minWidth: '160px'
+                        }}
+                      >
+                        {footerLoading ? (
+                          <RefreshCw size={14} className="animate-spin" />
+                        ) : (
+                          <>
+                            <Zap size={14} fill="#020617" />
+                            <span>{lang === 'it' ? 'Inizia Prova Gratis' : 'Start Free Trial'}</span>
+                          </>
+                        )}
+                      </button>
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'var(--accent-cyan)', fontWeight: '700', textShadow: '0 0 6px rgba(34, 211, 238, 0.3)', textAlign: 'center' }}>
+                      ⚠️ {lang === 'it' 
+                        ? 'Dopo 7 giorni verrà richiesto il pagamento per continuare a usare l\'app. Nessuna carta richiesta.' 
+                        : 'After 7 days, payment will be requested to continue using the app. No card required.'}
+                    </span>
+                  </form>
+                ) : (
+                  <div 
+                    className="glass" 
+                    style={{ 
+                      padding: '24px 30px', 
+                      borderRadius: '16px', 
+                      borderColor: 'var(--accent-teal)', 
+                      background: 'rgba(20, 184, 166, 0.05)', 
+                      boxShadow: '0 0 25px rgba(20, 184, 166, 0.15)',
+                      maxWidth: '520px',
+                      margin: '0 auto',
+                      width: '100%'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--accent-teal)', marginBottom: '8px' }}>
+                      <ShieldCheck size={20} />
+                      <span style={{ fontWeight: '800', fontSize: '15px' }}>
+                        {lang === 'it' ? 'PROVA ATTIVATA CON SUCCESSO!' : 'TRIAL ACTIVATED SUCCESSFULLY!'}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: 0 }}>
+                      {lang === 'it' 
+                        ? `Grazie! Il link di installazione è stato inviato a ${footerEmail}.`
+                        : `Thank you! The setup link has been sent to ${footerEmail}.`}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </section>
@@ -1807,14 +2704,219 @@ export default function LandingPage() {
               <ShieldCheck size={12} style={{ color: 'var(--accent-teal)' }} />
               Merchant of Record: Lemon Squeezy
             </span>
-            <span>•</span>
-            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <FileText size={12} />
-              IT/EN Multilingual Support
-            </span>
           </div>
         </div>
       </footer>
+
+      {/* CHECKOUT MODAL (FORM 3) */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(2, 6, 23, 0.85)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 99999,
+          padding: '20px',
+          animation: 'fadeIn 0.25s ease forwards'
+        }}>
+          <div className="glass animate-fade-up" style={{
+            width: '100%',
+            maxWidth: '480px',
+            background: '#090d16',
+            border: '1px solid rgba(34, 211, 238, 0.3)',
+            borderRadius: '20px',
+            padding: '30px',
+            boxShadow: '0 25px 50px rgba(0, 0, 0, 0.8), 0 0 35px rgba(34, 211, 238, 0.15)',
+            position: 'relative'
+          }}>
+            {/* Close button */}
+            <button 
+              type="button"
+              onClick={() => setIsModalOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid var(--border-color)',
+                borderRadius: '50%',
+                width: '32px',
+                height: '32px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                transition: 'all 0.2s'
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.color = '#fff';
+                e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.color = '#94a3b8';
+                e.currentTarget.style.borderColor = 'var(--border-color)';
+              }}
+            >
+              <X size={16} />
+            </button>
+
+            {!modalSuccess ? (
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (!modalEmail || !modalNome) return;
+                  setModalLoading(true);
+                  setTimeout(() => {
+                    setModalLoading(false);
+                    setModalSuccess(true);
+                  }, 1200);
+                }}
+                style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+              >
+                <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--accent-cyan)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                    Lemon Squeezy Checkout
+                  </span>
+                  <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff', marginTop: '4px' }}>
+                    {lang === 'it' ? 'Attivazione Account Premium' : 'Premium Account Activation'}
+                  </h3>
+                  <div className="glass" style={{ display: 'inline-flex', padding: '6px 16px', borderRadius: '10px', marginTop: '8px', border: '1px solid rgba(34, 211, 238, 0.15)', background: 'rgba(34, 211, 238, 0.02)' }}>
+                    <span style={{ fontSize: '12px', fontWeight: '800', color: '#fff' }}>
+                      {modalPlan === 'trial' && (lang === 'it' ? '7 Giorni Prova Gratis — 0.00€' : '7-Day Free Trial — 0.00€')}
+                      {modalPlan === 'monthly' && (lang === 'it' ? 'Premium Mensile — Prova 7 Giorni gratis (poi 9.99€/mese)' : 'Premium Monthly — 7 Days Trial free (then 9.99€/mo)')}
+                      {modalPlan === 'yearly' && (lang === 'it' ? 'Premium Annuale — Prova 7 Giorni gratis (poi 59.99€/anno)' : 'Premium Yearly — 7 Days Trial free (then 59.99€/yr)')}
+                      {modalPlan === 'lifetime' && (lang === 'it' ? 'Premium Lifetime — Pagamento Unico 359.99€' : 'Premium Lifetime — One-time 359.99€')}
+                    </span>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                    {lang === 'it' ? 'Il tuo Nome' : 'Your Name'}
+                  </label>
+                  <input 
+                    type="text" 
+                    required 
+                    placeholder={lang === 'it' ? 'es. Daniele' : 'e.g. Daniele'}
+                    value={modalNome}
+                    onChange={(e) => setModalNome(e.target.value)}
+                    style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '13px', fontFamily: 'inherit' }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-secondary)' }}>
+                    {lang === 'it' ? 'Indirizzo Email' : 'Email Address'}
+                  </label>
+                  <input 
+                    type="email" 
+                    required 
+                    placeholder={lang === 'it' ? 'la-tua-email@esempio.com' : 'your-email@example.com'}
+                    value={modalEmail}
+                    onChange={(e) => setModalEmail(e.target.value)}
+                    style={{ background: 'rgba(0, 0, 0, 0.2)', border: '1px solid var(--border-color)', borderRadius: '10px', padding: '12px 14px', color: '#fff', outline: 'none', fontSize: '13px', fontFamily: 'inherit' }}
+                  />
+                </div>
+
+                {/* Clear Warning */}
+                {modalPlan !== 'lifetime' ? (
+                  <div style={{ display: 'flex', gap: '8px', background: 'rgba(34, 211, 238, 0.04)', border: '1.5px dashed rgba(34, 211, 238, 0.3)', padding: '12px 14px', borderRadius: '12px', fontSize: '11px', color: 'var(--accent-cyan)', lineHeight: '1.5' }}>
+                    <span>⚠️</span>
+                    <span>
+                      {lang === 'it' 
+                        ? 'Dopo i 7 giorni di prova gratuita verrà richiesto il pagamento dell\'abbonamento scelto per continuare a usare l\'app. Puoi annullare in qualsiasi momento.' 
+                        : 'After the 7-day free trial, payment will be requested for the chosen plan to continue using the app. You can cancel at any time.'}
+                    </span>
+                  </div>
+                ) : (
+                  <div style={{ display: 'flex', gap: '8px', background: 'rgba(251, 191, 36, 0.04)', border: '1.5px dashed rgba(251, 191, 36, 0.3)', padding: '12px 14px', borderRadius: '12px', fontSize: '11px', color: 'var(--accent-gold)', lineHeight: '1.5' }}>
+                    <span>💎</span>
+                    <span>
+                      {lang === 'it' 
+                        ? 'Nessun abbonamento periodico. Pagamento unico con accesso Premium illimitato per sempre.' 
+                        : 'No recurring subscription. One-time payment with unlimited Premium access forever.'}
+                    </span>
+                  </div>
+                )}
+
+                <button 
+                  type="submit" 
+                  disabled={modalLoading}
+                  className="btn glow-btn"
+                  style={{
+                    padding: '14px', borderRadius: '12px', fontWeight: '800', fontSize: '13px', border: 'none', cursor: 'pointer',
+                    background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-teal) 100%)',
+                    color: '#020617', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '6px'
+                  }}
+                >
+                  {modalLoading ? (
+                    <RefreshCw size={14} className="animate-spin" />
+                  ) : (
+                    <>
+                      <ShieldCheck size={16} />
+                      <span>
+                        {modalPlan === 'trial' && (lang === 'it' ? 'Attiva Prova Gratis 7 Giorni' : 'Activate 7-Day Free Trial')}
+                        {modalPlan !== 'trial' && (lang === 'it' ? 'Inizia con Prova Gratuita' : 'Start with Free Trial')}
+                      </span>
+                    </>
+                  )}
+                </button>
+
+                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'var(--text-muted)' }}>
+                  <Lock size={10} />
+                  <span>Merchant of Record: Lemon Squeezy (Secure 256-bit SSL)</span>
+                </div>
+              </form>
+            ) : (
+              <div style={{ textAlign: 'center', display: 'flex', flexDirection: 'column', gap: '16px', padding: '10px 0' }}>
+                <div style={{ 
+                  width: '60px', 
+                  height: '60px', 
+                  borderRadius: '50%', 
+                  background: 'rgba(20, 184, 166, 0.1)', 
+                  border: '2px solid var(--accent-teal)',
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  color: 'var(--accent-teal)',
+                  margin: '0 auto'
+                }}>
+                  <ShieldCheck size={32} />
+                </div>
+
+                <div>
+                  <h3 style={{ fontSize: '20px', fontWeight: '900', color: '#fff' }}>
+                    {lang === 'it' ? 'Grazie per la fiducia!' : 'Thank you for your trust!'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: 'var(--text-secondary)', marginTop: '6px', lineHeight: '1.5' }}>
+                    {lang === 'it' 
+                      ? `Il tuo account per ${modalPlan === 'trial' ? 'la Prova Gratis' : 'il piano Premium'} è pronto! Abbiamo inviato le istruzioni ed il link di installazione a ${modalEmail}.`
+                      : `Your account for the ${modalPlan === 'trial' ? 'Free Trial' : 'Premium plan'} is ready! We have sent instructions and the setup link to ${modalEmail}.`}
+                  </p>
+                </div>
+
+                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+
+                <button 
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ padding: '12px', borderRadius: '10px', fontSize: '12.5px', fontWeight: '800', cursor: 'pointer' }}
+                >
+                  {lang === 'it' ? 'Chiudi Finestra' : 'Close Window'}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
     </div>
   );
