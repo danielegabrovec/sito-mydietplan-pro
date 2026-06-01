@@ -1378,7 +1378,7 @@ export default function LandingPage() {
                     </p>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'baseline', fontFamily: 'var(--font-title)' }}>
-                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>99.99€</span>
+                    <span style={{ fontSize: '40px', fontWeight: '900', color: 'var(--text-primary)' }}>359.99€</span>
                     <span style={{ fontSize: '14px', color: 'var(--text-muted)', marginLeft: '4px' }}>/ {lang === 'it' ? 'una tantum' : 'one-time'}</span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--accent-gold)', fontWeight: '700', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
