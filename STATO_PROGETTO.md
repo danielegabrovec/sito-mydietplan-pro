@@ -39,15 +39,21 @@ API in `api/`: `lemon-squeezy.js` (webhook), `cancel-subscription.js` (disdetta)
 
 ---
 
-## 🎯 Cosa manca da fare
+## ✅ Operativo già fatto
+- **Env su Vercel** (Production): `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`,
+  `LEMON_SQUEEZY_WEBHOOK_SECRET` (allineato al webhook), `LEMON_SQUEEZY_API_KEY`,
+  `RESEND_API_KEY`, `ALLOWED_ORIGINS`.
+- **Webhook registrato** su Lemon Squeezy → `midietplan-pro.vercel.app/api/lemon-squeezy`
+  (eventi `subscription_*` + `order_created` + `order_refunded`; signing secret combaciante).
+- **Mergiato in `main` e deployato in produzione** (endpoint live: `GET`→405, `POST` senza firma→401).
 
-1. **Variabili d'ambiente su Vercel**: `SUPABASE_SERVICE_ROLE_KEY`, `LEMON_SQUEEZY_WEBHOOK_SECRET`,
-   `LEMON_SQUEEZY_API_KEY`, `RESEND_API_KEY`, `RESEND_FROM_EMAIL`, `ALLOWED_ORIGINS`.
-2. **Webhook registrato** su Lemon Squeezy verso `/api/lemon-squeezy` con il secret giusto.
-3. **Dominio mittente Resend verificato** (SPF/DKIM) per non finire in SPAM.
+## 🎯 Cosa manca da fare
+1. **Test end-to-end** (in corso): pagamento → webhook → `subscriptions` (`user_id`) → sblocco → disdetta → revoca.
+2. **Store Lemon Squeezy approvato** (onboarding venditore: dati fiscali + IBAN) per incassare davvero.
+3. **Dominio mittente Resend verificato** (SPF/DKIM) + `RESEND_FROM_EMAIL`, per non finire in SPAM.
 4. **Idempotenza webhook** (dedup `event_id`) per i retry di Lemon Squeezy.
-5. **Test end-to-end reale** del flusso pagamento→sblocco→disdetta→revoca.
-6. **Rotazione segreti** e apertura **PR** verso `main` + deploy.
+5. **Rotazione segreti** (erano nel repo) prima del lancio pubblico.
+6. **Pagine legali** (privacy art.13/consenso salute, EULA + disclaimer medico, policy rimborsi).
 
 > Nota: il progetto Vercel del sito si chiama `midietplan-pro` (dominio `midietplan-pro.vercel.app`);
 > la web-app è il progetto `mydietplan` (`mydietplan-green.vercel.app`). Gli schemi DB stanno nel repo
