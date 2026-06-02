@@ -43,17 +43,22 @@ API in `api/`: `lemon-squeezy.js` (webhook), `cancel-subscription.js` (disdetta)
 - **Env su Vercel** (Production): `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_URL`,
   `LEMON_SQUEEZY_WEBHOOK_SECRET` (allineato al webhook), `LEMON_SQUEEZY_API_KEY`,
   `RESEND_API_KEY`, `ALLOWED_ORIGINS`.
-- **Webhook registrato** su Lemon Squeezy → `midietplan-pro.vercel.app/api/lemon-squeezy`
+- **Webhook registrato** (test mode) → `midietplan-pro.vercel.app/api/lemon-squeezy`
   (eventi `subscription_*` + `order_created` + `order_refunded`; signing secret combaciante).
+- **✔ Test end-to-end superato in Test mode**: pagamento → webhook → `subscriptions` → sblocco → disdetta → revoca.
+- **✔ Pagine legali pubblicate (IT + EN)** in `public/legal/` → `/legal/` e `/legal/en/`
+  (privacy art.13/consenso salute, Termini/EULA + disclaimer medico, rimborsi/recesso). Linkate dal
+  footer della landing; aggiunte anche alla **Description dei prodotti** su Lemon Squeezy.
 - **Mergiato in `main` e deployato in produzione** (endpoint live: `GET`→405, `POST` senza firma→401).
 
 ## 🎯 Cosa manca da fare
-1. **Test end-to-end** (in corso): pagamento → webhook → `subscriptions` (`user_id`) → sblocco → disdetta → revoca.
-2. **Store Lemon Squeezy approvato** (onboarding venditore: dati fiscali + IBAN) per incassare davvero.
+1. **Approvazione store Lemon Squeezy** — *Identity verification: In Review*. Gate principale per incassare.
+2. **Dopo l'approvazione → GO-LIVE** (vedi `GO-LIVE.md`): webhook Live, API key **live**, "Copy to Live
+   Mode" dei prodotti + checkout UUID live, prova d'acquisto reale.
 3. **Dominio mittente Resend verificato** (SPF/DKIM) + `RESEND_FROM_EMAIL`, per non finire in SPAM.
-4. **Idempotenza webhook** (dedup `event_id`) per i retry di Lemon Squeezy.
-5. **Rotazione segreti** (erano nel repo) prima del lancio pubblico.
-6. **Pagine legali** (privacy art.13/consenso salute, EULA + disclaimer medico, policy rimborsi).
+4. **Rotazione segreti** (erano nel repo) prima del lancio pubblico.
+5. **Idempotenza webhook** (dedup `event_id`) per i retry di Lemon Squeezy — miglioria.
+6. **Revisione legale** delle pagine (consigliata per un'app che tratta dati di salute).
 
 > Nota: il progetto Vercel del sito si chiama `midietplan-pro` (dominio `midietplan-pro.vercel.app`);
 > la web-app è il progetto `mydietplan` (`mydietplan-green.vercel.app`). Gli schemi DB stanno nel repo
