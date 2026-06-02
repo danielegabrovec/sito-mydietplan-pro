@@ -1,12 +1,21 @@
 export default async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET,OPTIONS,PATCH,DELETE,POST,PUT');
-  res.setHeader(
-    'Access-Control-Allow-Headers',
-    'X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version, Authorization'
-  );
+  // CORS ristretti agli origin noti (sito + web-app + dev locale).
+  const defaultOrigins = [
+    'https://midietplan-pro.vercel.app',
+    'https://mydietplan-green.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : defaultOrigins);
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
+  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
@@ -26,7 +35,9 @@ export default async function handler(req, res) {
 
   // Dynamic destination email (defaults to your Resend account owner email)
   const destinationEmail = process.env.TO_EMAIL || 'daniele.gabrovec@gmail.com';
-  const { subject, html, text } = req.body;
+  // Mittente configurabile: usa un dominio verificato in produzione per non finire in SPAM.
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'MyDietPlan Pro <onboarding@resend.dev>';
+  const { subject, html, text } = req.body || {};
 
   try {
     const response = await fetch('https://api.resend.com/emails', {
@@ -36,7 +47,7 @@ export default async function handler(req, res) {
         'Authorization': `Bearer ${apiKey}`
       },
       body: JSON.stringify({
-        from: 'MyDietPlan Pro <onboarding@resend.dev>',
+        from: fromEmail,
         to: destinationEmail,
         subject: subject || 'Nuovo Messaggio dal Sito MyDietPlan Pro',
         html: html || `<p>Messaggio vuoto</p>`,

@@ -17,12 +17,8 @@ async function getRawBody(req) {
 }
 
 export default async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-signature');
-
+  // Questo è un webhook server-to-server di Lemon Squeezy, validato via firma HMAC:
+  // i CORS del browser non servono. Manteniamo solo la gestione del metodo.
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
@@ -57,7 +53,16 @@ export default async function handler(req, res) {
     const hmac = crypto.createHmac('sha256', webhookSecret);
     const digest = hmac.update(rawBody).digest('hex');
 
-    if (!crypto.timingSafeEqual(Buffer.from(digest, 'hex'), Buffer.from(signature, 'hex'))) {
+    // Hardening: una firma di lunghezza errata farebbe lanciare timingSafeEqual (500).
+    // Confrontiamo prima la lunghezza e restituiamo 401 in modo controllato.
+    const digestBuf = Buffer.from(digest, 'hex');
+    let signatureBuf;
+    try {
+      signatureBuf = Buffer.from(String(signature), 'hex');
+    } catch {
+      return res.status(401).json({ error: 'Malformed signature.' });
+    }
+    if (digestBuf.length !== signatureBuf.length || !crypto.timingSafeEqual(digestBuf, signatureBuf)) {
       console.warn('Webhook signature verification failed.');
       return res.status(401).json({ error: 'Invalid signature.' });
     }
@@ -77,19 +82,16 @@ export default async function handler(req, res) {
     const email = (attributes.user_email || attributes.customer_email || '').toLowerCase().trim();
     const customerId = String(attributes.customer_id || '');
     const customerPortalUrl = attributes.urls?.customer_portal || '';
-    
+    // user_id passato come custom data nel checkout (checkout[custom][user_id]) — match affidabile pagamento→account
+    const customUserId = body.meta?.custom_data?.user_id || null;
+
     if (!email) {
       console.warn('Skipping event: no customer email found in attributes.');
       return res.status(200).json({ success: true, message: 'Skipped: email is empty.' });
     }
 
-    // Gestione speciale inversioni e-mail di test (gabrovec.daniele@ vs daniele.gabrovec@)
+    // Aggiorniamo esclusivamente l'email reale dell'ordine (nessuna duplicazione su email di test).
     const emailsToUpdate = [email];
-    if (email === 'daniele.gabrovec@gmail.com') {
-      emailsToUpdate.push('gabrovec.daniele@gmail.com');
-    } else if (email === 'gabrovec.daniele@gmail.com') {
-      emailsToUpdate.push('daniele.gabrovec@gmail.com');
-    }
 
     let isSubscribed = false;
     let tier = 'monthly';
@@ -107,29 +109,48 @@ export default async function handler(req, res) {
     // 3. Gestisci i diversi eventi
     if (eventName.startsWith('subscription_')) {
       subscriptionId = String(body.data.id || '');
-      const status = attributes.status; // 'active', 'on_trial', 'cancelled', 'expired', 'unpaid', 'paused'
+      const status = attributes.status; // 'active','on_trial','past_due','cancelled','expired','unpaid','paused'
       const endsAt = attributes.ends_at;
 
-      // Un abbonamento è attivo se lo status è active/on_trial, 
-      // oppure se è cancelled ma non è ancora giunto alla data di scadenza (endsAt)
-      const isActiveStatus = ['active', 'on_trial'].includes(status);
+      // Attivo se status active/on_trial/past_due (past_due = retry pagamento, grace period),
+      // oppure se cancelled ma non ancora scaduto (endsAt futuro: l'utente ha pagato fino a fine periodo).
+      const isActiveStatus = ['active', 'on_trial', 'past_due'].includes(status);
       const isCancelledButActive = status === 'cancelled' && endsAt && (new Date(endsAt) > new Date());
-      
+
       isSubscribed = isActiveStatus || isCancelledButActive;
-      
+
+      // Un rimborso del pagamento dell'abbonamento revoca immediatamente l'accesso.
+      if (eventName === 'subscription_payment_refunded') {
+        isSubscribed = false;
+      }
+
       console.log(`[Lemon Squeezy Webhook] Sub: ${subscriptionId} | Status: ${status} | Active: ${isSubscribed}`);
-      
+
     } else if (eventName === 'order_created') {
       subscriptionId = String(body.data.id || '');
       const status = attributes.status; // 'paid', 'pending', 'failed', 'refunded'
-      
-      // Gli ordini una-tantum (come il piano Lifetime) determinano l'attivazione immediata se pagati
-      if (status === 'paid') {
+
+      // IMPORTANTE: NON dedurre "lifetime" dallo status "paid".
+      // Anche gli abbonamenti (monthly/yearly) generano un order_created: quegli ordini sono gestiti
+      // ESCLUSIVAMENTE dagli eventi subscription_*. Qui attiviamo SOLO i veri acquisti one-time (Lifetime),
+      // riconosciuti dal product_name (tier === 'lifetime'). Così un abbonato mensile non diventa "lifetime".
+      if (status === 'paid' && tier === 'lifetime') {
         isSubscribed = true;
-        tier = 'lifetime';
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: `Order non-lifetime (tier=${tier}, status=${status}): gestito dagli eventi subscription_*.`
+        });
       }
-      
-      console.log(`[Lemon Squeezy Webhook] Order: ${subscriptionId} | Status: ${status} | Active: ${isSubscribed}`);
+
+      console.log(`[Lemon Squeezy Webhook] Order Lifetime: ${subscriptionId} | Status: ${status} | Active: ${isSubscribed}`);
+
+    } else if (eventName === 'order_refunded') {
+      // Rimborso di un acquisto one-time (es. Lifetime): revoca l'accesso (anti-frode acquisto+rimborso).
+      subscriptionId = String(body.data.id || '');
+      isSubscribed = false;
+      console.log(`[Lemon Squeezy Webhook] Order Refunded: ${subscriptionId} -> accesso revocato`);
+
     } else {
       // Ignora altri eventi irrilevanti per lo sblocco dell'accesso
       return res.status(200).json({ success: true, message: `Ignored unhandled event: ${eventName}` });
@@ -170,12 +191,14 @@ export default async function handler(req, res) {
             subscription_id: subscriptionId,
             customer_id: customerId,
             customer_portal_url: customerPortalUrl,
+            // Collega l'account solo se l'user_id è arrivato dal checkout (non sovrascrivere con null)
+            ...(customUserId ? { user_id: customUserId } : {}),
             updated_at: new Date().toISOString()
           })
         });
       } else {
-        // Se non esiste il record per l'email invertita secondaria, lo creiamo solo se stiamo sbloccando
-        if (targetEmail !== email && !isSubscribed) {
+        // Se non stiamo sbloccando (es. rimborso/revoca) e non esiste alcun record, non creiamo righe inutili
+        if (!isSubscribed) {
           continue;
         }
         console.log(`[Supabase Sync] Nessun record trovato per ${targetEmail}. Eseguo l'INSERT (POST)...`);
@@ -193,6 +216,7 @@ export default async function handler(req, res) {
             subscription_id: subscriptionId,
             customer_id: customerId,
             customer_portal_url: customerPortalUrl,
+            ...(customUserId ? { user_id: customUserId } : {}),
             updated_at: new Date().toISOString()
           })
         });
