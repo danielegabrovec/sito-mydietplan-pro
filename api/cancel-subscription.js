@@ -1,7 +1,19 @@
 export default async function handler(req, res) {
-  // CORS Headers
-  res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS ristretti: l'app autentica via Bearer token (non cookie), quindi niente credenziali.
+  const defaultOrigins = [
+    'https://mydietplan-green.vercel.app',
+    'https://midietplan-pro.vercel.app',
+    'http://localhost:3000',
+    'http://localhost:3001'
+  ];
+  const allowedOrigins = (process.env.ALLOWED_ORIGINS
+    ? process.env.ALLOWED_ORIGINS.split(',').map(s => s.trim())
+    : defaultOrigins);
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
+  res.setHeader('Vary', 'Origin');
   res.setHeader('Access-Control-Allow-Methods', 'POST,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
@@ -80,7 +92,7 @@ export default async function handler(req, res) {
 
     const subscriptions = await dbResponse.json();
     if (!subscriptions || subscriptions.length === 0) {
-      return res.status(200).json({ success: true, message: 'No subscription record found in database.' });
+      return res.status(200).json({ success: true, cancelled: false, nothingToCancel: true, message: 'No subscription record found in database.' });
     }
 
     const subscription = subscriptions[0];
@@ -88,16 +100,23 @@ export default async function handler(req, res) {
     const isSubscribed = subscription.is_subscribed;
     const tier = subscription.subscription_tier;
 
-    if (!isSubscribed || !subscriptionId || tier === 'tester') {
-      return res.status(200).json({ success: true, message: 'No active recurring paid subscription to cancel.' });
+    // 'lifetime' e 'tester' non hanno fatturazione ricorrente: non c'è nulla da disdire.
+    if (!isSubscribed || !subscriptionId || tier === 'tester' || tier === 'lifetime') {
+      return res.status(200).json({
+        success: true,
+        cancelled: false,
+        nothingToCancel: true,
+        message: 'No active recurring paid subscription to cancel.'
+      });
     }
 
     // 4. Annulla l'abbonamento su Lemon Squeezy tramite API
     if (!lemonSqueezyApiKey) {
-      console.warn('[Lemon Squeezy] LEMON_SQUEEZY_API_KEY non configurata. Salto la cancellazione automatica su Lemon Squeezy.');
-      return res.status(200).json({ 
-        success: true, 
-        warning: 'Subscription could not be cancelled automatically because API key is missing. Please manage manually.',
+      // Errore esplicito (NON un finto successo): il client deve sapere che la disdetta NON è avvenuta.
+      console.error('[Lemon Squeezy] LEMON_SQUEEZY_API_KEY non configurata: impossibile annullare automaticamente.');
+      return res.status(503).json({
+        error: 'Servizio di cancellazione non configurato (API key mancante). Abbonamento NON annullato. Contatta il supporto o usa il portale di fatturazione.',
+        cancelled: false,
         subscriptionId
       });
     }
@@ -115,16 +134,39 @@ export default async function handler(req, res) {
     if (!lsResponse.ok) {
       const lsError = await lsResponse.text();
       console.error(`[Lemon Squeezy Error] Cancellazione fallita: ${lsError}`);
-      return res.status(500).json({ 
+      return res.status(502).json({
         error: 'Failed to cancel subscription on Lemon Squeezy.',
-        details: lsError 
+        cancelled: false,
+        details: lsError
       });
     }
 
     console.log(`[Lemon Squeezy] Abbonamento ${subscriptionId} cancellato con successo su Lemon Squeezy.`);
-    return res.status(200).json({ 
-      success: true, 
-      message: 'Subscription successfully cancelled on Lemon Squeezy.' 
+
+    // 5. Revoca immediata lato DB: imposta is_subscribed=false su Supabase.
+    // Importante per il flusso "elimina account": se la riga ha user_id=null non verrebbe
+    // eliminata a cascata, quindi resterebbe un record "attivo" orfano. Qui la revochiamo.
+    try {
+      const updateRes = await fetch(`${supabaseUrl}/rest/v1/subscriptions?email=eq.${encodeURIComponent(email)}`, {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ is_subscribed: false, updated_at: new Date().toISOString() })
+      });
+      if (!updateRes.ok) {
+        console.error(`[Supabase] Impossibile aggiornare is_subscribed=false: ${await updateRes.text()}`);
+      }
+    } catch (dbErr) {
+      console.error('[Supabase] Errore aggiornamento post-cancellazione:', dbErr);
+    }
+
+    return res.status(200).json({
+      success: true,
+      cancelled: true,
+      message: 'Subscription successfully cancelled on Lemon Squeezy.'
     });
 
   } catch (error) {

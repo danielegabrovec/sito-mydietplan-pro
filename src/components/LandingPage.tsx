@@ -1886,12 +1886,12 @@ export default function LandingPage() {
                             >
                               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: 'var(--accent-teal)', fontWeight: '800', fontSize: '14px', marginBottom: '4px' }}>
                                 <ShieldCheck size={16} />
-                                <span>{lang === 'it' ? 'PROVA ATTIVATA CON SUCCESSO!' : 'TRIAL ACTIVATED SUCCESSFULLY!'}</span>
+                                <span>{lang === 'it' ? 'REPORT INVIATO!' : 'REPORT SENT!'}</span>
                               </div>
                               <p style={{ fontSize: '12px', color: 'var(--text-secondary)', margin: 0 }}>
                                 {lang === 'it'
-                                  ? `I tuoi target ed il link per scaricare l'app sono stati inviati a ${calcEmail}. Controlla la posta!`
-                                  : `Your targets and app download link have been sent to ${calcEmail}. Check your inbox!`}
+                                  ? `Abbiamo inviato i tuoi target a ${calcEmail}. Per attivare la prova gratuita di 7 giorni, registrati ora nell'app (nessuna carta richiesta).`
+                                  : `We've sent your targets to ${calcEmail}. To activate your 7-day free trial, register now in the app (no card required).`}
                               </p>
                             </div>
                           )}
@@ -2813,13 +2813,13 @@ export default function LandingPage() {
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: 'var(--accent-teal)', marginBottom: '8px' }}>
                       <ShieldCheck size={20} />
                       <span style={{ fontWeight: '800', fontSize: '15px' }}>
-                        {lang === 'it' ? 'PROVA ATTIVATA CON SUCCESSO!' : 'TRIAL ACTIVATED SUCCESSFULLY!'}
+                        {lang === 'it' ? 'RICHIESTA INVIATA!' : 'REQUEST SENT!'}
                       </span>
                     </div>
                     <p style={{ fontSize: '13px', color: 'var(--text-primary)', margin: 0 }}>
-                      {lang === 'it' 
-                        ? `Grazie! Il link di installazione è stato inviato a ${footerEmail}.`
-                        : `Thank you! The setup link has been sent to ${footerEmail}.`}
+                      {lang === 'it'
+                        ? `Grazie! Ti abbiamo scritto a ${footerEmail}. Per iniziare la prova gratuita di 7 giorni registrati ora nell'app (nessuna carta richiesta).`
+                        : `Thank you! We've emailed ${footerEmail}. To start your 7-day free trial, register now in the app (no card required).`}
                     </p>
                   </div>
                 )}
@@ -3233,16 +3233,24 @@ export default function LandingPage() {
                               <p style="margin: 10px 0 0 0; font-size: 15px; color: #ffffff;"><strong>Indirizzo Email:</strong> <a href="mailto:${modalEmail}" style="color: #22d3ee; text-decoration: none;">${modalEmail}</a></p>
                             </div>
                             
-                            <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 15px; text-align: center;">Inviato in tempo reale dalla simulazione checkout Lemon Squeezy.</p>
+                            <p style="font-size: 12px; color: #94a3b8; margin-top: 40px; border-top: 1px solid #1e293b; padding-top: 15px; text-align: center;">Lead di pre-checkout inviato dal sito MyDietPlan Pro.</p>
                           </div>
                         `
                       })
                     });
                   } catch (err) {
-                    console.error("Checkout form submission failed", err);
-                  } finally {
-                    setModalLoading(false);
-                    setModalSuccess(true);
+                    console.error("Checkout lead notification failed", err);
+                  }
+                  setModalLoading(false);
+                  // Niente finto successo: reindirizziamo al flusso REALE.
+                  // 'trial'  -> registrazione nella web-app (prova 7 giorni senza carta).
+                  // a pagamento -> checkout reale Lemon Squeezy con email precompilata.
+                  if (modalPlan === 'trial') {
+                    window.location.href = 'https://mydietplan-green.vercel.app';
+                  } else {
+                    const base = LEMON_SQUEEZY_CHECKOUT_URLS[modalPlan];
+                    const sep = base.includes('?') ? '&' : '?';
+                    window.location.href = `${base}${sep}checkout[email]=${encodeURIComponent(modalEmail)}`;
                   }
                 }}
                 style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
