@@ -3142,6 +3142,11 @@ export default function LandingPage() {
           <p style={{ color: 'var(--text-muted)', fontSize: '11.5px', margin: 0 }}>
             {currentT.footerText}
           </p>
+          <div style={{ display: 'flex', gap: '14px', justifyContent: 'center', flexWrap: 'wrap', marginTop: '4px', fontSize: '11.5px' }}>
+            <a href="/legal/privacy.html" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>Privacy</a>
+            <a href="/legal/termini.html" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{lang === 'it' ? 'Termini' : 'Terms'}</a>
+            <a href="/legal/rimborsi.html" style={{ color: 'var(--text-secondary)', textDecoration: 'none' }}>{lang === 'it' ? 'Rimborsi & Recesso' : 'Refunds'}</a>
+          </div>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', marginTop: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
               <ShieldCheck size={12} style={{ color: 'var(--accent-teal)' }} />
